@@ -6,9 +6,12 @@ function $(id) {
 $('query').addEventListener('input', input, false);
 $('query').addEventListener('keyup', input, false);
 $('query').addEventListener('keypress', input, false);
+$('query').addEventListener('focus', input, false);
 $('fulltext').addEventListener('click', fullsearch, false);
 $('more').addEventListener('click', more, true);
 window.addEventListener('scroll', scroll, true);
+window.addEventListener('mouseup', select, true);
+window.addEventListener('mousemove', select, true);
 
 var searchDelay = Debounce(80); // hold 80 ms before searching (when typed in)
 
@@ -19,6 +22,9 @@ var query_string; // serialized query option (will become URL fragment under cer
 function newsearch(opt) {
 	var undef;
 	if (opt.query === undef) return;
+	if ($('query').value !== opt.query) $('query').value = opt.query;
+
+	opt.query = opt.query.replace(/^▽|▼/g, ''); // for SKK
 	if (!opt.page) opt.page = 1;
 	opt.full = !!opt.full;
 	if (opt.full && opt.page > 1) opt.id_offset = fullsearch_id_offset || 0;
@@ -50,11 +56,12 @@ function searchFinished(res) {
 	});
 }
 
-var last_query;
+var last_query; // only used in input() function
 function input() {
-	if ($('query').value === last_query) return;
-	last_query = $('query').value;
-	newsearch({query: last_query});
+	var q = $('query').value;
+	if (q === last_query) return;
+	last_query = q;
+	newsearch({query: q});
 }
 
 function fullsearch() {
@@ -76,6 +83,13 @@ function scroll(e) {
 		}
 	}
 }
+
+function select(e) {
+	if (document.activeElement === $('query')) return;
+	var sel = (document.getSelection() + '').replace(/^\s+|\s+$/g, '');
+	if (sel !== '') $('query').value = sel;
+}
+
 
 // View
 function showResults(res) {
@@ -259,7 +273,7 @@ function sw() {
 
 // if hash is set already, do search
 console.log(location.hash);
-$('query').value = parseQuery(location.hash.replace(/^#/, '')).query;
+newsearch(parseQuery(location.hash.replace(/^#/, '')));
 // autofocus on Chrome is very weird, so implement by myself
 $('query').focus();
 
@@ -277,7 +291,7 @@ function parseQuery(query) {
 
 function serializeToQuery(obj) {
 	var ret = [], undef;
-	for (var x in obj) if (obj.hasOwnProperty && obj[x] !== undef && obj[x] !== false) {
+	for (var x in obj) if (obj.hasOwnProperty && obj[x] !== undef && obj[x] !== false && obj[x] !== null) {
 		ret.push(x + '=' + encodeURIComponent(obj[x]));
 	}
 	return ret.join('&');
