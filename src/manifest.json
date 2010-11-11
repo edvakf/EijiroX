@@ -3,11 +3,11 @@
   "description": "Local Eijiro search engine (dictionary not included)",
   "version": "0.1.0",
   "icons": {
-    "24": "icons/icon24.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png"
+    "24": "public_html/icons/icon24.png",
+    "32": "public_html/icons/icon32.png",
+    "48": "public_html/icons/icon48.png"
   },
-  "background_page": "background/background.html",
-  "options_page": "viewer/index.html",
+  "background_page": "index.html",
+  "options_page": "public_html/viewer/index.html",
   "permissions": ["unlimitedStorage"]
 }
