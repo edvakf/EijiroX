@@ -1,0 +1,71 @@
+body {
+	overflow-y: scroll;
+}
+
+.hidden {
+	display:none;
+}
+
+#switch {
+	display: block;
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+}
+
+#inputbox {
+	margin-top: 2em;
+	width: 100%;
+	text-align: center
+}
+
+#query {
+	width: 100%;
+	max-width: 40em;
+}
+
+#fulltext {
+}
+
+#results {
+	font-size: small;
+}
+
+#results.largefont {
+	font-size: medium;
+}
+
+#results.noruby rp, #results.noruby rt {
+	display:none;
+}
+
+#results a.searchlink, #results a.searchlink {
+	color: blue;
+}
+
+#results a.implicit.searchlink {
+	color: black;
+	text-decoration: none;
+}
+
+#results a.implicit.searchlink:hover {
+	color: blue;
+	text-decoration: underline;
+}
+
+#more {
+	width: 100%;
+}
+
+#loading {
+	text-align: center;
+	width: 100%;
+}
+
+#tinydiv {
+	position: absolute;
+	bottom: -1px;
+	height: 1px;
+	width: 1px;
+}
+

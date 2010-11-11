@@ -1,0 +1,19 @@
+= EijiroX
+
+Local Eijiro search engine.
+
+Eijiro is the best English-Japanese dictionary with a million records and counting.
+
+Note: Dictionary is not included (you must buy your own copy of Eijiro)
+
+http://www.eijiro.jp/
+
+== Author
+
+Atsushi TAKAYAMA (@edvakf on twitter)
+
+== License
+
+The MIT License
+
+Copyright (c) 2009 Atsushi TAKAYAMA
