@@ -8,7 +8,6 @@ $('query').addEventListener('keyup', input, false);
 $('query').addEventListener('keypress', input, false);
 $('query').addEventListener('focus', input, false);
 $('fulltext').addEventListener('click', fullsearch, false);
-$('more').addEventListener('click', more, true);
 window.addEventListener('scroll', scroll, true);
 window.addEventListener('mouseup', select, true);
 window.addEventListener('mousemove', select, true);
@@ -69,14 +68,13 @@ function fullsearch() {
 }
 
 function more() {
-	$('more').className = 'hidden';
 	var opt = parseQuery(query_string);
 	++opt.page;
 	newsearch(opt);
 }
 
 function scroll(e) {
-	var m = $('more');
+	var m = $('loading');
 	if (m.className !== 'hidden') {
 		if (m.getBoundingClientRect().top < window.innerHeight) {
 		 	 more();
@@ -93,9 +91,8 @@ function select(e) {
 
 // View
 function showResults(res) {
-	$('loading').className = 'hidden';
 	var ul = $('res-list');
-	var more = $('more');
+	var m = $('loading');
 	ul.className = 'hidden';
 	if (res.page === 1) {
 		ul.innerHTML = '';
@@ -105,12 +102,11 @@ function showResults(res) {
 	});
 	ul.className = '';
 	if (res.more) {
-		more.className = '';
-		$('tinydiv').className = '';
-		more.title = 'page ' + (res.page + 1);
+		m.className = '';
+		m.title = 'page ' + (res.page + 1);
+		scroll();
 	} else {
-		more.className = 'hidden';
-		$('tinydiv').className = 'hidden';
+		m.className = 'hidden';
 	}
 }
 
