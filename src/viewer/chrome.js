@@ -11,7 +11,7 @@ function store(e) {
 	ids.forEach(function(id) {$(id).disabled = true;});
 	$('store').disabled = true;
 
-	var m = 'Please wait';
+	var m = '変換中';
 	var p = ['.', '..', '...'];
 	$('store').value = m;
 	var t = setInterval(function() {p.push(p.shift()); $('store').value = m + p[0]}, 1000);
@@ -40,12 +40,12 @@ function store(e) {
 		// all 4 files are collected
 		if (ids.every(function(id) {return files[id] === null})) {
 			clearInterval(t);
-			$('store').value = 'Storing failed: no files are selected';
+			$('store').value = 'ファイルが選択されていません';
 			return;
 		}
 		storeRequest(files, function() {
 			clearInterval(t);
-			$('store').value = 'Storing finished!!!';
+			$('store').value = '終了しました';
 		});
 	}
 }

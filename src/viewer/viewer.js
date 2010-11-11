@@ -2,109 +2,83 @@ function $(id) {
 	return document.getElementById(id);
 }
 
-// autofocus on Chrome is very weird, so implement by myself
-$('query').focus();
-
-
-// switch views
-$('switch').addEventListener('click', sw, false);
-
-function sw() {
-	if ($('config').className.indexOf('hidden') >= 0) {
-		$('config').className = $('config').className.replace('hidden', '');
-		$('main').className += 'hidden';
-	} else {
-		$('main').className = $('main').className.replace('hidden', '');
-		$('config').className += 'hidden';
-	}
-}
-
-// general
-$('query').addEventListener('input', search, false);
-$('query').addEventListener('keyup', search, false);
-$('query').addEventListener('keypress', search, false);
+// Controller
+$('query').addEventListener('input', input, false);
+$('query').addEventListener('keyup', input, false);
+$('query').addEventListener('keypress', input, false);
 $('fulltext').addEventListener('click', fullsearch, false);
-window.addEventListener('load', load, false);
-window.addEventListener('hashchange', hashchange, false);
 $('more').addEventListener('click', more, true);
-window.addEventListener('scroll', scroll,true);
+window.addEventListener('scroll', scroll, true);
 
-function newhash(hash) {
+var searchDelay = Debounce(80); // hold 80 ms before searching (when typed in)
+
+var fullsearch_id_offset; // when the last search was full text search, remember the offset
+
+var query_string; // serialized query option (will become URL fragment under certain conditions)
+
+function newsearch(opt) {
 	var undef;
-	if (hash.query === undef) return;
-	if (!hash.page) hash.page = 1;
-	location.hash = serializeToQuery(hash);
+	if (opt.query === undef) return;
+	if (!opt.page) opt.page = 1;
+	opt.full = !!opt.full;
+	if (opt.full && opt.page > 1) opt.id_offset = fullsearch_id_offset || 0;
+
+	query_string = serializeToQuery(opt);
+
+	searchDelay(function() {
+		searchRequest(opt, searchFinished);
+		$('loading').className = ''; // show loading icon
+	});
 }
 
-var timer;
-var query;
-var fullsearch_id_offset;
+var setHashDelay = DelayHashChange(hashchange, 3000);
+
 function hashchange() {
-	clearTimeout(timer);
-	var undef;
-	var h = location.hash;
-	var hash = parseQuery(h.replace(/^#/, ''));
-	if (hash.query === undef) return;
-
-	timer = setTimeout(function() {
-		if (location.hash !== h) return;
-		query = hash.query;
-		if ($('query').value !== query) $('query').value = query;
-		hash.page *= 1;
-		hash.full = !!hash.full;
-		if (hash.full && hash.page > 1) hash.id_offset = fullsearch_id_offset || 0;
-		searchRequest(hash, showResults);
-		$('loading').className = '';
-	}, 90);
+	var hash = location.hash.replace(/^#/, '');console.log(hash);
+	if (hash === query_string) return;
+	var opt = parseQuery(hash);
+	newsearch(opt);
 }
 
-function search() {
-	if ($('query').value === query) return;
-	newhash({query: $('query').value});
+function searchFinished(res) {
+	//console.log(res);
+	if (res.query !== parseQuery(query_string).query) return;
+	if (res.id_offset) fullsearch_id_offset = res.id_offset;
+
+	setHashDelay(query_string, function() {
+		showResults(res);
+	});
+}
+
+var last_query;
+function input() {
+	if ($('query').value === last_query) return;
+	last_query = $('query').value;
+	newsearch({query: last_query});
 }
 
 function fullsearch() {
-	newhash({query: $('query').value, full: true});
-}
-
-function load() {
-	console.log(location.hash);
-	var h = parseQuery(location.hash.replace(/^#/, ''));
-	console.log(h);
-	if (h.page == 1) {
-		hashchange();
-	} else {
-		h.page = 1;
-		newhash(h);
-	}
+	newsearch({query: $('query').value, full: true});
 }
 
 function more() {
 	$('more').className = 'hidden';
-	var h = parseQuery(location.hash.replace(/^#/, ''));
-	++h.page;
-	newhash(h);
+	var opt = parseQuery(query_string);
+	++opt.page;
+	newsearch(opt);
 }
 
 function scroll(e) {
-	var box = $('more').getBoundingClientRect();
-	if ((box.top || box.bottom || box.left || box.right) && box.top < window.innerHeight) {
-		if ($('more').className !== 'hidden') more();
+	var m = $('more');
+	if (m.className !== 'hidden') {
+		if (m.getBoundingClientRect().top < window.innerHeight) {
+		 	 more();
+		}
 	}
 }
 
-function eijiroToListItems(lines) {
-	return lines.map(function(r) {
-		var li = document.createElement('li');
-		li.innerHTML =  parseLine(r);
-		return li;
-	});
-}
-
+// View
 function showResults(res) {
-	console.log(res);
-	if (res.query !== query) return;
-	if (res.id_offset) fullsearch_id_offset = res.id_offset;
 	$('loading').className = 'hidden';
 	var ul = $('res-list');
 	var more = $('more');
@@ -124,6 +98,14 @@ function showResults(res) {
 		more.className = 'hidden';
 		$('tinydiv').className = 'hidden';
 	}
+}
+
+function eijiroToListItems(lines) {
+	return lines.map(function(r) {
+		var li = document.createElement('li');
+		li.innerHTML =  parseLine(r);
+		return li;
+	});
 }
 
 function parseLine(line) {
@@ -197,6 +179,18 @@ function makeImplicitSearchLinks(html) {
 		}).join('');
 }
 
+
+// clicking a word to do next search
+document.addEventListener('click', openSearchLink, true);
+
+function openSearchLink(e) {
+	if (e.target.className.indexOf('searchlink') >= 0 && e.target.title) {
+		e.preventDefault();
+		e.stopPropagation();
+		newsearch({query: e.target.title});
+	}
+}
+
 var htmlEscapePattern = {
 	'>': '&gt;',
 	'<': '&lt;',
@@ -212,20 +206,23 @@ function htmlEscape(text) {
 }
 
 
-// clicking a word to do next search
-document.addEventListener('click', openSearchLink, true);
 
-function openSearchLink(e) {
-	if (e.target.className.indexOf('searchlink') >= 0 && e.target.title) {
-		e.preventDefault();
-		e.stopPropagation();
-		query = $('query').value = e.target.title;
-		searchRequest(query, 1, false, showResults);
+// Initialize
+// switch views
+$('switch').addEventListener('click', sw, false);
+
+function sw() {
+	if ($('config').className.indexOf('hidden') >= 0) {
+		$('config').className = $('config').className.replace('hidden', '');
+		$('main').className += 'hidden';
+	} else {
+		$('main').className = $('main').className.replace('hidden', '');
+		$('config').className += 'hidden';
 	}
 }
 
 // whether to show ruby or not
-window.addEventListener('load', function() {
+(function() {
 	var n = $('noruby');
 	if (localStorage['noruby']) {
 		n.checked = true;
@@ -240,10 +237,10 @@ window.addEventListener('load', function() {
 			$('results').className = $('results').className.replace(' noruby', '');
 		}
 	}, false);
-}, false);
+}());
 
 // whether to use normal size font or not
-window.addEventListener('load', function() {
+(function() {
 	var n = $('largefont');
 	if (localStorage['largefont']) {
 		n.checked = true;
@@ -258,9 +255,16 @@ window.addEventListener('load', function() {
 			$('results').className = $('results').className.replace(' largefont', '');
 		}
 	}, false);
-}, false);
+}());
 
-// utility
+// if hash is set already, do search
+console.log(location.hash);
+$('query').value = parseQuery(location.hash.replace(/^#/, '')).query;
+// autofocus on Chrome is very weird, so implement by myself
+$('query').focus();
+
+
+// Utility
 function parseQuery(query) {
 	if (!query) return {};
 	var ret = {};
@@ -273,8 +277,45 @@ function parseQuery(query) {
 
 function serializeToQuery(obj) {
 	var ret = [], undef;
-	for (var x in obj) if (obj.hasOwnProperty && obj[x] !== undef) {
+	for (var x in obj) if (obj.hasOwnProperty && obj[x] !== undef && obj[x] !== false) {
 		ret.push(x + '=' + encodeURIComponent(obj[x]));
 	}
 	return ret.join('&');
+}
+
+
+// handle hashchange as it is, but when doing frequent action, delay hashchange
+function DelayHashChange (hashchange, wait) {
+	var currentId = null;
+	if (!wait) wait = 5000;
+	var timer;
+	var reallySetHash;
+	function doAction(id, action) {
+		timer = clearTimeout(timer); // clearTimeout returns undefined
+		currentId = id;
+		action();
+		timer = setTimeout(setHash, wait);
+		reallySetHash = true;
+	}
+	function _hashchange(e) {
+		if (timer) reallySetHash = false;
+		hashchange(e);
+	}
+	window.addEventListener('hashchange', _hashchange, false);
+	function setHash() {
+		window.removeEventListener('hashchange', _hashchange, false);
+		if (reallySetHash) location.hash = currentId;
+		window.addEventListener('hashchange', _hashchange, false);
+	}
+	return doAction;
+};
+
+// debouncing
+function Debounce(wait) {
+	var timer;
+	function doAction(action) {
+		clearTimeout(timer);
+		timer = setTimeout(action, wait);
+	}
+	return doAction;
 }

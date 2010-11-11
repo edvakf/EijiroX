@@ -2,15 +2,16 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>ChromeDic</title>
+		<title>EijiroX</title>
 		<link rel="stylesheet" href="viewer.css"/>
 	</head>
 	<body>
 		<a id="switch" href="javascript:void 0">▽</a>
+		<h1>EijiroX</h1>
 		<div id="config" class="hidden">
 			<form method="post" action="store" id="dictionaries">
-				<h2>Store dictionary files in a database</h2>
-				<p>Typically takes between 5-10 minutes.</p>
+				<h2>データベースの作成</h2>
+				<p>5分から10分ぐらいかかることがあります。その間はこのページを閉じないでください。変換が終われば元のファイルは移動しても構いません。</p>
 				<ul>
 					<li><label for="eiji">英辞郎 (EIJI-***.TXT)</label> <input type="file" id="eiji" name="eiji"/></li>
 					<li><label for="waei">和英辞郎 (WAEI-***.TXT)</label> <input type="file" id="waei" name="waei"/></li>
@@ -19,8 +20,11 @@
 				</ul>
 				<input type="submit" id="store" name="store" value="Store"/>
 			</form>
-			<p><label for="noruby">ルビを表示しない</label> <input type="checkbox" id="noruby" name="noruby"/></p>
-			<p><label for="largefont">小さいフォントを使わない（普通サイズで表示）</label> <input type="checkbox" id="largefont" name="largefont"/></p>
+			<h2>検索結果の表示設定</h2>
+			<ul>
+				<li><label for="noruby">ルビを表示しない</label> <input type="checkbox" id="noruby" name="noruby"/></li>
+				<li><label for="largefont">小さいフォントを使わない（普通サイズで表示）</label> <input type="checkbox" id="largefont" name="largefont"/></li>
+			</ul>
 		</div>
 		<div id="main">
 			<div id="inputbox">
@@ -33,7 +37,7 @@
 			</div>
 		</div>
 		<div id="tinydiv"></div><!-- it's here so that the page is scrollable -->
-		<script src="chrome.js"></script>
 		<script src="viewer.js"></script>
+		<script src="chrome.js"></script>
 	</body>
 </html>

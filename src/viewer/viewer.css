@@ -6,15 +6,20 @@ body {
 	display:none;
 }
 
+h1 {
+	display: block;
+	text-align: center;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+	font-size: x-large;
+}
+
 #switch {
 	display: block;
-	position: absolute;
-	top: 0.5em;
-	right: 0.5em;
+	float: right;
 }
 
 #inputbox {
-	margin-top: 2em;
 	width: 100%;
 	text-align: center
 }
