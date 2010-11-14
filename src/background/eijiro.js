@@ -46,7 +46,6 @@ function createTables(callback) {
 			tx.executeSql('DROP INDEX IF EXISTS eiji_i;');
 			tx.executeSql('DROP TABLE IF EXISTS waei;');
 			tx.executeSql('DROP INDEX IF EXISTS waei_i;');
-			tx.executeSql('DROP INDEX IF EXISTS waei_first_i;');
 			tx.executeSql('DROP TABLE IF EXISTS ryaku;');
 			tx.executeSql('DROP INDEX IF EXISTS ryaku_i;');
 			tx.executeSql('DROP TABLE IF EXISTS reiji;');
@@ -70,7 +69,6 @@ function createTables(callback) {
 				'CREATE TABLE waei (' +
 					'id INTEGER PRIMARY KEY, ' +
 					'entry TEXT, ' +
-					'first TEXT, ' +
 					'normalized TEXT, ' +
 					'raw TEXT ' +
 				');'
@@ -99,7 +97,6 @@ function makeIndex(callback) {
 			tx.executeSql('CREATE INDEX eiji_i ON eiji (entry);');
 			tx.executeSql('CREATE INDEX ryaku_i ON ryaku (entry);');
 			tx.executeSql('CREATE INDEX waei_i ON waei (entry);');
-			tx.executeSql('CREATE INDEX waei_first_i ON waei (first);');
 		},
 		function transactionError(err) {
 			console.log(err);
@@ -133,25 +130,20 @@ function storeFile(type, file, callback) {
 	var m, i = 0;
 	var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
 	var finished = true;
-	var store_first = type === 'waei'; // store first character as well
 	var no_entry = type === 'reiji'; // don't store entry column
 	var sql = 
 		no_entry ? 
 			'INSERT INTO ' + type + ' (id, normalized, raw) VALUES (?,?,?);' :
-		store_first ? 
-			'INSERT INTO ' + type + ' (id, entry, first, normalized, raw) VALUES (?,?,?,?,?);' :
 			'INSERT INTO ' + type + ' (id, entry, normalized, raw) VALUES (?,?,?,?);';
 	function _store() {
 		db.transaction(
 			function transaction(tx) {
-				while(m = file.getNextLine()) {// getNextLine() is defined in public_html/chrome.js and background/opera.js
+				while(m = file.getNextLine()) { // getNextLine() is defined in public_html/chrome.js and background/opera.js
 					if (m = m.match(re_line)) {
 						tx.executeSql(
 							sql,
 							no_entry ?
 								[++primary_key, likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
-							store_first ?
-								[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(m[1].charAt(0)).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
 								[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]]
 						);
 						if (++i % 50000 === 0) {
@@ -183,7 +175,7 @@ var limit_full = 5; // how many results to show in one page (for full search)
 var optlist = ['query', 'page', 'full', 'id_offset'];
 
 function search(opt, callback) {
-	console.log(opt);
+	//console.log(opt);
 	var query = opt.query;
 	var page = opt.page;
 	var full = opt.full;
@@ -258,9 +250,9 @@ function searchJa(opt, callback) {
 		function transaction(tx) {
 			tx.executeSql(
 				'SELECT raw FROM waei ' +
-				'WHERE first = ? AND entry LIKE ? ' + 
+				'WHERE entry >= ? AND entry < ? ' + 
 				'LIMIT ? OFFSET ?;', 
-				[q.charAt(0), likeEscape(q)+'%', limit, offset],
+				[likeEscape(q), likeEscape(nextWord(q)), limit, offset],
 				function sqlSuccess(tx, res) {
 					var results = [];
 					for (var i = 0; i < res.rows.length; i++) {

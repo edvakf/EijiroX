@@ -2,10 +2,19 @@ if (window.opera) {
 
 	storeHandler = function storeHandler(e) {
 		var conn = e.connection;
+
 		var req = conn.request;
 		var res = conn.response;
 
+		if (!conn.isLocal) {
+			res.setStatusCode(404);
+			res.setResponseHeader('Content-Type', 'text/html');
+			res.write('<!DOCTYPE html><meta charset="utf-8"/><title></title><p>Not Found</p>');
+			res.close();
+		}
+
 		res.setResponseHeader('Content-Type', 'text/html');
+
 		res.implicitFlush = true;
 		res.write(
 			['<!DOCTYPE html>'
@@ -65,7 +74,16 @@ if (window.opera) {
 		var conn = e.connection;
 		var req = conn.request;
 		var res = conn.response;
+
+		if (!conn.isLocal) {
+			res.setStatusCode(404);
+			res.setResponseHeader('Content-Type', 'text/html');
+			res.write('<!DOCTYPE html><meta charset="utf-8"/><title></title><p>Not Found</p>');
+			res.close();
+		}
+
 		res.setResponseHeader('Content-Type', 'text/plain');
+
 		var opt = {};
 		opt.query = req.queryItems.query ? decodeURIComponent(req.queryItems.query[0]) : '';
 		opt.page = req.queryItems.page ? req.queryItems.page[0] * 1 : 1;
