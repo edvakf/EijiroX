@@ -2,19 +2,38 @@ var db = openDatabase('dictionary', '1.0', 'eijiro dictionary', 1024*1024*1024);
 var primary_key = 0; // id for all entries are serial numbers
 
 function store(files, callback) {
-	console.log(files);
 	var filenames = ['eiji', 'ryaku', 'waei', 'reiji'];
+	var filename;
+	var eijiros = {eiji: '英辞郎', ryaku: '略語郎', waei: '和英辞郎', reiji: '例辞郎'};
 	primary_key = 0;
-	createTables(function _storeFile() {
-		var filename = filenames.shift();
+	callback({progress: true, message: 'データベース初期化中。'});
+	console.log('creating tables');
+	createTables(function _storeFile(status) {
+		if (status.error) {
+			callback(status);
+			return;
+		} else if (status.progress) {
+			callback({progress: true, message: eijiros[filename] + ' : ' + status.message + '行目。'});
+			return;
+		}
+		if (status.nofile) {
+			console.log(filename + ' not selected');
+			callback({progress: true, message: eijiros[filename] + ' : ファイルが選択されていません。'});
+		} else {
+			console.log(filename + ' finished');
+			if (filename) callback({progress: true, message: eijiros[filename] + ' : 保存完了。'});
+		}
+		filename = filenames.shift();
 		if (filename) {
 			console.log('storing: ' + filename);
+			callback({progress: true, message: eijiros[filename] + ' : 保存開始。'});
 			storeFile(filename, files[filename], _storeFile);
 		} else {
 			console.log('making index');
+			callback({progress: true, message: 'インデックス作成中。時間がかかることがあります。'});
 			makeIndex(function() {
 				console.log('indexing done');
-				if (callback) callback();
+				callback({end: true, message: 'データベース作成完了。おつかれさまでした。'});
 			});
 		}
 	});
@@ -31,7 +50,6 @@ function createTables(callback) {
 			tx.executeSql('DROP TABLE IF EXISTS ryaku;');
 			tx.executeSql('DROP INDEX IF EXISTS ryaku_i;');
 			tx.executeSql('DROP TABLE IF EXISTS reiji;');
-			//tx.executeSql('DROP INDEX IF EXISTS reiji_i;');
 			tx.executeSql(
 				'CREATE TABLE eiji (' + 
 					'id INTEGER PRIMARY KEY, ' +
@@ -67,9 +85,10 @@ function createTables(callback) {
 		},
 		function transactionError(err) {
 			console.log(err);
+			callback({error: true, message: err.message});
 		},
 		function transactionSuccess(tx) {
-			if (callback) callback();
+			callback({end: true});
 		}
 	);
 }
@@ -84,15 +103,16 @@ function makeIndex(callback) {
 		},
 		function transactionError(err) {
 			console.log(err);
+			callback({error: true, message: err.message});
 		},
 		function transactionSuccess(tx) {
-			if (callback) callback();
+			callback({end: true});
 		}
 	);
 }
 
 var re_ascii = /([\x00-\xf7]+)/;
-var re_break = /(?:^|■・?|●|◆(?:file:\S+)?|、?【(?:発音！?|＠|レベル|分節|URL)】[^【]+|、?【.+?】|{.*?}|《.+?》|〈.+?〉|: ＝|<→?|[,.;:!?'"\/>\[\]{}()|&=+_#~`*\@-]|$)+/g;
+var re_break = /(?:^|■・?|●|◆(?:file:\S+)?|、?【(?:発音！?|＠|レベル|分節|URL)】[^【]+|、?【.+?】|{.*?}|《.+?》|〈.+?〉|<→?|[,.;:!?'"\/>\[\]{}()|&=+_#~`*\@-]|$)+/g;
 var re_delete = /(?:[\x00-\x1f\x7f-\xa0]|｛.+?｝|〔|〕|（|）)+/g; // control characters, rubies, eijiro formats
 var re_space = /\s+/g;
 var re_braceslast = /^(.*)〔〜(.*?)〕$/;
@@ -109,10 +129,10 @@ function eijiroNormalize(entry, translation) {
 }
 
 function storeFile(type, file, callback) {
-	if (!file) return callback && callback();
+	if (!file) return callback({nofile: true});
 	var m, i = 0;
-	var re_line = /■(.*?)(?:  {.*?})? : (.*?)\r?\n/g;
-	var finished = false;
+	var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
+	var finished = true;
 	var store_first = type === 'waei'; // store first character as well
 	var no_entry = type === 'reiji'; // don't store entry column
 	var sql = 
@@ -124,30 +144,33 @@ function storeFile(type, file, callback) {
 	function _store() {
 		db.transaction(
 			function transaction(tx) {
-				while(m = re_line.exec(file.result)) {
-					//if (i % 10000 === 0) console.log(eijiroNormalize(m[0]));
-					tx.executeSql(
-						sql,
-						no_entry ? 
-							[++primary_key, likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
-						store_first ? 
-							[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(m[1].charAt(0)).toLowerCase(), likeEscape(eijiroNormalize(m[0])), m[0]] :
-							[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]]
-					);
-					if (++i % 100000 === 0) {
-						console.log(m[0]);
-						finished = false;
-						break;
+				while(m = file.getNextLine()) {// getNextLine() is defined in public_html/chrome.js and background/opera.js
+					if (m = m.match(re_line)) {
+						tx.executeSql(
+							sql,
+							no_entry ?
+								[++primary_key, likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
+							store_first ?
+								[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(m[1].charAt(0)).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
+								[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]]
+						);
+						if (++i % 50000 === 0) {
+							console.log(m);
+							callback({progress: true, message: i});
+							finished = false;
+							break;
+						}
+						finished = true;
 					}
-					finished = true;
 				}
 			},
 			function transactionError(err) {
 				console.log(err);
+				callback({error: true, message: err.message});
 			},
 			function transactionSuccess(tx) {
-				if (!finished) return setTimeout(_store, 500);
-				if (callback) return callback();
+				if (!finished) return setTimeout(_store, 300);
+				callback({end: true});
 			}
 		);
 	}

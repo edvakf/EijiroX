@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget>
+  <widgetname>EijiroX</widgetname>
+  <description>Local Eijiro search engine (dictionary not included)</description>
+  <feature name="http://xmlns.opera.com/webserver">
+    <param name="type" value="service"/>
+    <param name="servicepath" value="eijiro"/>
+  </feature>
+</widget>

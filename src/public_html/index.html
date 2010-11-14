@@ -4,12 +4,13 @@
 		<meta charset="utf-8" />
 		<title>EijiroX</title>
 		<link rel="stylesheet" href="viewer.css"/>
+		<link rel="icon" href="icons/favicon.ico"/>
 	</head>
 	<body>
 		<a id="switch" href="javascript:void 0">▽</a>
 		<h1>EijiroX</h1>
 		<div id="config" class="hidden">
-			<form method="post" action="store" id="dictionaries">
+			<form method="post" action="store" id="dictionaries" enctype="multipart/form-data">
 				<h2>データベースの作成</h2>
 				<p>5分から10分ぐらいかかることがあります。その間はこのページを閉じないでください。変換が終われば元のファイルは移動しても構いません。</p>
 				<ul>
@@ -37,5 +38,6 @@
 		</div>
 		<script src="viewer.js"></script>
 		<script src="chrome.js"></script>
+		<script src="opera2.js"></script>
 	</body>
 </html>
