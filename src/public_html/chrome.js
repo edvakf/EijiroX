@@ -12,13 +12,7 @@ store = function store(e) {
 	e.preventDefault();
 	ids.forEach(function(id) {$(id).disabled = true;});
 	$('store').disabled = true;
-
-  /*
-	var m = '変換中';
-	var p = ['.', '..', '...'];
-	$('store').value = m;
-	var t = setInterval(function() {p.push(p.shift()); $('store').value = m + p[0]}, 1000);
-  */
+	$('store').value = 'ファイル読込中';
 
 	var files = {};
 	var i = 0;
@@ -47,7 +41,6 @@ store = function store(e) {
 	})();
 
 	function upload() {
-		console.log(files);
 		if (ids.some(function(id) {return files[id] === void 0})) return;
 		// all 4 files are collected
 		if (ids.every(function(id) {return files[id] === null})) {
@@ -56,8 +49,6 @@ store = function store(e) {
 			return;
 		}
 		storeRequest(files, function callback(status) {
-			//clearInterval(t);
-			//$('store').value = '終了しました';
 			$('store').value = status.message;
 		});
 	}
@@ -67,9 +58,27 @@ $('dictionaries').addEventListener('submit', store, false);
 
 
 // search
-// chrome specific
 searchRequest = function searchRequest(opt, callback) {
 	BG.search(opt, callback);
 }
+
+
+// if opened in a popup, get selected text of selected window
+chrome.tabs.getSelected(null, function(tab) { // getCurrent doesn't work. (maybe because popup is open?)
+	chrome.tabs.executeScript(tab.id, {
+		allFrames: true,
+		code: [
+			'(function() {',
+				'var sel = window.getSelection() + "";',
+				'if (sel) chrome.extension.sendRequest({query: sel});',
+			'}());'
+		].join('\n')
+	});
+});
+
+chrome.extension.onRequest.addListener(function(req) {
+	if (req.query) newsearch({query: req.query});
+});
+
 
 }

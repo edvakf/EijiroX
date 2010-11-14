@@ -7,7 +7,12 @@
     "32": "public_html/icons/icon32.png",
     "48": "public_html/icons/icon48.png"
   },
+  "browser_action": {
+    "default_icon": "public_html/icons/icon18.png",
+    "default_title": "EijiroX",
+    "default_popup": "public_html/index.html"
+  },
   "background_page": "index.html",
   "options_page": "public_html/index.html",
-  "permissions": ["unlimitedStorage"]
+  "permissions": ["unlimitedStorage", "tabs", "http://*/*", "http://*/*"]
 }

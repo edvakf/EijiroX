@@ -64,6 +64,7 @@ function input() {
 }
 
 function fullsearch() {
+	$('res-list').innerHTML = '';
 	newsearch({query: $('query').value, full: true});
 }
 
