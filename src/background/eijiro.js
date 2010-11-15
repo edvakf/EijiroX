@@ -1,6 +1,11 @@
 var db = openDatabase('dictionary', '1.0', 'eijiro dictionary', 1024*1024*1024);
 var primary_key = 0; // id for all entries are serial numbers
 
+var debug = true;
+if (!debug) {
+	console = {log:function(){}};
+}
+
 function store(files, callback) {
 	var filenames = ['eiji', 'ryaku', 'waei', 'reiji'];
 	var filename;

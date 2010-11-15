@@ -65,6 +65,7 @@ searchRequest = function searchRequest(opt, callback) {
 
 // if opened in a popup, get selected text of selected window
 chrome.tabs.getSelected(null, function(tab) { // getCurrent doesn't work. (maybe because popup is open?)
+	if (!/^https?:/.test(tab.url)) return;
 	chrome.tabs.executeScript(tab.id, {
 		allFrames: true,
 		code: [
