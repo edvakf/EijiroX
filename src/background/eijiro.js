@@ -47,42 +47,21 @@ function store(files, callback) {
 function createTables(callback) {
 	db.transaction(
 		function transaction(tx) {
-			tx.executeSql('DROP TABLE IF EXISTS eiji;');
-			tx.executeSql('DROP INDEX IF EXISTS eiji_i;');
-			tx.executeSql('DROP TABLE IF EXISTS waei;');
-			tx.executeSql('DROP INDEX IF EXISTS waei_i;');
-			tx.executeSql('DROP TABLE IF EXISTS ryaku;');
-			tx.executeSql('DROP INDEX IF EXISTS ryaku_i;');
-			tx.executeSql('DROP TABLE IF EXISTS reiji;');
+			tx.executeSql('DROP TABLE IF EXISTS eijiro;');
+			tx.executeSql('DROP INDEX IF EXISTS eijiro_i;');
+			tx.executeSql('DROP TABLE IF EXISTS invindex;')
+			tx.executeSql('DROP INDEX IF EXISTS invindex_i;')
 			tx.executeSql(
-				'CREATE TABLE eiji (' + 
+				'CREATE TABLE eijiro (' + 
 					'id INTEGER PRIMARY KEY, ' +
 					'entry TEXT, ' + /* dictionary word */
-					'normalized TEXT, ' + /* normalized by removing ◆ and so on */
 					'raw TEXT ' + /* raw line */
 				');'
 			);
 			tx.executeSql(
-				'CREATE TABLE ryaku (' +
-					'id INTEGER PRIMARY KEY, ' +
-					'entry TEXT, ' +
-					'normalized TEXT, ' +
-					'raw TEXT ' +
-				');'
-			);
-			tx.executeSql(
-				'CREATE TABLE waei (' +
-					'id INTEGER PRIMARY KEY, ' +
-					'entry TEXT, ' +
-					'normalized TEXT, ' +
-					'raw TEXT ' +
-				');'
-			);
-			tx.executeSql(
-				'CREATE TABLE reiji (' +
-					'id INTEGER PRIMARY KEY, ' +
-					'normalized TEXT, ' +
-					'raw TEXT ' +
+				'CREATE TABLE invindex (' + 
+					'token TEXT, ' + 
+					'id INTEGER ' + 
 				');'
 			);
 		},
@@ -99,9 +78,8 @@ function createTables(callback) {
 function makeIndex(callback) {
 	db.transaction(
 		function transaction(tx) {
-			tx.executeSql('CREATE INDEX eiji_i ON eiji (entry);');
-			tx.executeSql('CREATE INDEX ryaku_i ON ryaku (entry);');
-			tx.executeSql('CREATE INDEX waei_i ON waei (entry);');
+			tx.executeSql('CREATE INDEX eijiro_i ON eijiro (entry);');
+			tx.executeSql('CREATE INDEX invindex_i ON invindex (token);');
 		},
 		function transactionError(err) {
 			console.log(err);
@@ -113,52 +91,75 @@ function makeIndex(callback) {
 	);
 }
 
-var re_ascii = /([\x00-\xf7]+)/;
-var re_break = /(?:^|■・?|●|◆(?:file:\S+)?|、?【(?:発音！?|＠|レベル|分節|URL)】[^【]+|、?【.+?】|{.*?}|《.+?》|〈.+?〉|<→?|[,.;:!?'"\/>\[\]{}()|&=+_#~`*\@-]|$)+/g;
-var re_delete = /(?:[\x00-\x1f\x7f-\xa0]|｛.+?｝|〔|〕|（|）)+/g; // control characters, rubies, eijiro formats
-var re_space = /\s+/g;
-var re_braceslast = /^(.*)〔〜(.*?)〕$/;
-function eijiroNormalize(entry, translation) {
-	return [
-		entry.replace(re_braceslast, '$2$1'),
-		translation
-	].join(' ')
-	.replace(re_delete, '')
-	.replace(re_break, ' ')
-	.split(re_ascii).join(' ')
-	.replace(re_space, ' ')
-	.toLowerCase();
+var re_sep = /[^一二三四五六七八九十百千万億兆一-龠々〆ヵヶぁ-んァ-ヴーｱ-ﾝﾞｰa-zA-Zａ-ｚＡ-Ｚ0-9０-９]+/g;
+var re_kanji = /[一-龠々〆ヵヶ]/;
+var re_common = /^(?:the|be|to|of|and|in|that|have|it|for|not|on|with|he|as|you|do|at|this|but|his|by|from|they|we|say|her|she|or|an|will|my|one|all|would|there)$/;
+function tokenize(str) {
+	var tokens = [];
+	var segments = uniq(segment(str).map(function(s) {return s.replace(re_sep, '')}));
+	for (var i = 0, l = segments.length; i < l; i++) {
+		var seg = segments[i];
+		switch(seg.length) {
+			case 0:
+				break;
+			case 1:
+				if (re_kanji.test(seg)) tokens.push(seg);
+				break;
+			default:
+				if (!re_common(seg)) tokens.push(seg);
+				break;
+		}
+	}
+	return tokens;
+}
+
+var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
+var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
+var re_henka = /【変化】([^【]+)/;
+var re_break = /(?:●|◆(?:file:\S+)?|【.+?】|{.*?}|《.+?》|〈.+?〉)+/g;
+var re_delete = /(?:[\x00-\x1f\x7f-\xa0]|｛.+?｝)+/g;
+function storeLine(tx, line, pkey, noentry) {
+	var tokens;
+	var m = line.match(re_line);
+	if (!m) return;
+	var entry = m[1], translation = m[2];
+	if (re_trivial.test(translation)) {
+		var n;
+		if (n = translation.match(re_henka)) {
+			tokens = [entry].concat(n[1].split('、'));
+		} else {
+			tokens = [entry];
+		}
+	} else {
+		tokens = tokenize((entry + ' ' + translation).replace(re_delete, '').replace(re_break, ' ').toLowerCase());
+	}
+	tx.executeSql(
+		'INSERT INTO eijiro (id, entry, raw) VALUES (?,?,?);',
+		[pkey, noentry ? null : likeEscape(entry).toLowerCase(), line]
+	);
+	for (var i = 0, l = tokens.length; i < l; i++) {
+		tx.executeSql("INSERT INTO invindex VALUES (?,?);", [tokens[i], pkey]);
+	}
+	return [entry, tokens, line];
 }
 
 function storeFile(type, file, callback) {
 	if (!file) return callback({nofile: true});
-	var m, i = 0;
-	var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
+	var line, i = 0;
 	var finished = true;
-	var no_entry = type === 'reiji'; // don't store entry column
-	var sql = 
-		no_entry ? 
-			'INSERT INTO ' + type + ' (id, normalized, raw) VALUES (?,?,?);' :
-			'INSERT INTO ' + type + ' (id, entry, normalized, raw) VALUES (?,?,?,?);';
+	var noentry = type === 'reiji';
 	function _store() {
 		db.transaction(
 			function transaction(tx) {
-				while(m = file.getNextLine()) { // getNextLine() is defined in public_html/chrome.js and background/opera.js
-					if (m = m.match(re_line)) {
-						tx.executeSql(
-							sql,
-							no_entry ?
-								[++primary_key, likeEscape(eijiroNormalize(m[1], m[2])), m[0]] :
-								[++primary_key, likeEscape(m[1]).toLowerCase(), likeEscape(eijiroNormalize(m[1], m[2])), m[0]]
-						);
-						if (++i % 50000 === 0) {
-							console.log(m);
-							callback({progress: true, message: i});
-							finished = false;
-							break;
-						}
-						finished = true;
+				while(line = file.getNextLine()) { // getNextLine() is defined in public_html/chrome.js and background/opera.js
+					var r = storeLine(tx, line, ++primary_key, noentry);
+					if (++i % 50000 === 0) {
+						console.log(r);
+						callback({progress: true, message: i});
+						finished = false;
+						break;
 					}
+					finished = true;
 				}
 			},
 			function transactionError(err) {
@@ -176,7 +177,6 @@ function storeFile(type, file, callback) {
 
 // search
 var limit = 30; // how many results to show in one page
-var limit_full = 5; // how many results to show in one page (for full search)
 var optlist = ['query', 'page', 'full', 'id_offset'];
 
 function search(opt, callback) {
@@ -192,58 +192,10 @@ function search(opt, callback) {
 	if (full) {
 		return searchFull(opt, callback);
 	}
-	//if (/[^-\w~!@#$%^&*()+={}\[\]\\'"<>&:;.,?\/ ]/.test(query)) {
-	if (/[^\x00-\x7f]/.test(query)) {
-		searchJa(opt, callback);
-	} else {
-		searchEng(opt, callback);
-	}
+	searchEntry(opt, callback);
 }
 
-function searchEng(opt, callback) {
-	var query = opt.query;
-	var page = opt.page;
-	console.log([query, page]);
-	var rv = {query:query, page:page, more:false, full:false, results:[]};
-	var offset = (page - 1) * limit;
-	var q = likeEscape((query + '').replace(/[\x00-\x1f\x7f-\xa0]/g,'').toLowerCase());
-	var sql = 
-		"SELECT raw FROM eiji " + 
-			"WHERE entry >= '"+sqlEscape(q)+"' " +
-			"AND entry < '"+sqlEscape(nextWord(q))+"' " +
-			"AND entry LIKE '"+sqlEscape(q)+"%' " +
-		"UNION ALL " +
-		"SELECT raw FROM ryaku " + 
-			"WHERE entry >= '"+sqlEscape(q)+"' " +
-			"AND entry < '"+sqlEscape(nextWord(q))+"' " +
-			"AND entry LIKE '"+sqlEscape(q)+"%' ";
-	//console.log(sql);
-	var t = Date.now();
-	db.transaction(
-		function transaction(tx) {
-			tx.executeSql(
-				sql + "LIMIT ? OFFSET ?;",
-				[limit, offset], 
-				function sqlSuccess(tx, res) {
-					var results = [];
-					for (var i = 0; i < res.rows.length; i++) {
-						results.push(res.rows.item(i).raw);
-					}
-					if (i === limit) rv.more = true;
-					rv.results = results;
-					console.log('took ' + (Date.now() - t) + ' ms');
-					if (callback) callback(rv);
-				},
-				function sqlError(tx, err) {
-					if (callback) callback(rv);
-					console.log(err);
-				}
-			);
-		}
-	)
-}
-
-function searchJa(opt, callback) {
+function searchEntry(opt, callback) {
 	var query = opt.query;
 	var page = opt.page;
 	console.log([query, page]);
@@ -254,17 +206,15 @@ function searchJa(opt, callback) {
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				'SELECT raw FROM waei ' +
+				'SELECT raw FROM eijiro ' +
 				'WHERE entry >= ? AND entry < ? ' + 
 				'LIMIT ? OFFSET ?;', 
 				[likeEscape(q), likeEscape(nextWord(q)), limit, offset],
 				function sqlSuccess(tx, res) {
-					var results = [];
-					for (var i = 0; i < res.rows.length; i++) {
-						results.push(res.rows.item(i).raw);
+					for (var i = 0, l = res.rows.length; i < res.rows.length; i++) {
+						rv.results.push(res.rows.item(i).raw);
 					}
 					if (i === limit) rv.more = true;
-					rv.results = results;
 					console.log('took ' + (Date.now() - t) + ' ms');
 					if (callback) callback(rv);
 				},
@@ -281,34 +231,43 @@ function searchFull(opt, callback) {
 	var query = opt.query;
 	var page = opt.page;
 	var id_offset = opt.id_offset || 0;
-	console.log([query, page, id_offset]);
 	var rv = {query:query, page:page, more:false, full:true, results:[]};
-	var q = '%' + likeEscape(eijiroNormalize('', query + '')) + '%';
+	var tokens = tokenize(query.toLowerCase());
+	console.log([query, tokens, page, id_offset]);
+	if (!tokens.length) callback(rv);
+	var longesttoken = '', longesttoken2 = '';
+	for (var i = 0, l = tokens.length; i < l; i++) {
+		if (longesttoken.length <= tokens[i].length) {
+			longesttoken2 = longesttoken;
+			longesttoken = tokens[i];
+		}
+	}
+
 	var t = Date.now();
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				'SELECT id, raw FROM eiji WHERE id > ? AND normalized LIKE ? ' + 
-				'UNION ALL ' +
-				'SELECT id, raw FROM ryaku WHERE id > ? AND normalized LIKE ? ' +
-				'UNION ALL ' +
-				'SELECT id, raw FROM waei WHERE id > ? AND normalized LIKE ? ' +
-				'UNION ALL ' +
-				'SELECT id, raw FROM reiji WHERE id > ? AND normalized LIKE ? ' +
-				'LIMIT ?;',
-				[id_offset, q, id_offset, q, id_offset, q, id_offset, q, limit_full],
+				longesttoken2.length ?
+					'SELECT eijiro.id, eijiro.raw FROM eijiro JOIN invindex AS idx1 USING (id) JOIN invindex AS idx2 USING (id) ' +
+						'WHERE eijiro.id > ? AND idx1.token = ? AND idx2.token = ? LIMIT ? ;' :
+					'SELECT id, raw FROM eijiro JOIN invindex USING (id) ' + 
+						'WHERE id > ? AND invindex.token = ? LIMIT ? ;',
+				longesttoken2.length ?
+					[id_offset, longesttoken, longesttoken2, limit] :
+					[id_offset, longesttoken, limit],
 				function sqlSuccess(tx, res) {
-					var results = [];
-					var idmax = 0;
-					for (var i = 0; i < res.rows.length; i++) {
-						results.push(res.rows.item(i).raw);
-						idmax = Math.max(idmax, res.rows.item(i).id);
+					var q = query.toLowerCase();
+					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
+						var item = rows.item(i);
+						if (item.raw.toLowerCase().indexOf(q) >= 0) {
+							rv.results.push(item.raw);
+						}
+						id_offset = item.id;
 					}
-					rv.id_offset = idmax;
-					if (i === limit_full) rv.more = true;
-					rv.results = results;
+					if (l === limit) rv.more = true;
+					rv.id_offset = id_offset;
 					console.log('took ' + (Date.now() - t) + ' ms');
-					if (callback) callback(rv);
+					callback(rv);
 				},
 				function sqlError(tx, err) {
 					if (callback) callback(rv);
@@ -335,4 +294,8 @@ function likeUnescape(text) {
 
 function nextWord(str) {// str is a non-empty string
 	return str.substr(0, str.length - 1) + String.fromCharCode(str.charCodeAt(str.length - 1) + 1);
+}
+
+function uniq(ary) {
+	return ary.filter(function(a, i) {return ary.indexOf(a) === i});
 }
