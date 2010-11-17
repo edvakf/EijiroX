@@ -8,6 +8,34 @@ Note: Dictionary is not included (you must buy your own copy of Eijiro)
 
 http://www.eijiro.jp/
 
+== How To Use
+
+On Chrome, install src/ directory as an unpacked extension, then open option page of the extension.
+
+On Opera, install src/config.xml as Opera Unite, then double click the EijiroX icon on Unite App Manager.
+
+At the first use, you must convert dictionary files to the database. 
+You need EIJI-***.TXT, WAEI-***.TXT, REIJI***.TXT and RYAKU***.TXT from eijiro.
+You can store without all 4 files, but you must have at least one of them (of course).
+Click the triangle on the top right corner of the page and choose files, then click "store".
+It takes more than 30 minutes, and it's quite heavy, so make sure you have nothing important to do on your computer.
+
+
+Currently, Opera does not allow creating over 10MB of database.
+Therefore, you MUST create the database on Chrome and copy the database to Opera's folder.
+On Windows, Chrome's database is located in
+
+ C:\Users\{{USERNAME}}\AppData\Local\Google\Chrome\User Data\Default\databases\chrome-extension_********\
+
+The filename is a number like "4". Copy the file and paste it on Opera's database folder
+
+ C:\Users\{{USERNAME}}\AppData\Local\Opera\Opera\widgets\wuid-********\pstorage\02\03\
+
+(may be different near the end, but not hard to find)
+
+The "wuid-********" part is confusing because you can't tell which widget (or Unite App) use which id,
+so open widgets.adr and check EijiroX there.
+
 == Author
 
 Atsushi TAKAYAMA (@edvakf on twitter)
@@ -17,3 +45,5 @@ Atsushi TAKAYAMA (@edvakf on twitter)
 The MIT License
 
 Copyright (c) 2009 Atsushi TAKAYAMA
+
+EijiroX makes use of TinySegmenter (c) 2008 Taku Kudo http://www.chasen.org/~taku/software/TinySegmenter/
