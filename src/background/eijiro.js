@@ -25,8 +25,10 @@ function store(files, callback) {
 			console.log(filename + ' not selected');
 			callback({progress: true, message: eijiros[filename] + ' : ファイルが選択されていません。'});
 		} else {
-			console.log(filename + ' finished');
-			if (filename) callback({progress: true, message: eijiros[filename] + ' : 保存完了。'});
+			if (filename) {
+				console.log(filename + ' finished');
+				callback({progress: true, message: eijiros[filename] + ' : 保存完了。'});
+			}
 		}
 		filename = filenames.shift();
 		if (filename) {
@@ -104,7 +106,6 @@ function tokenize(str) {
 	return tokens;
 }
 
-var re_dontindex = /^(?:[^一-龠々〆ヵヶ]|the|be|to|of|and|in|that|have|it|for|not|on|with|he|as|you|do|at|this|but|his|by|from|they|we|say|her|she|or|an|will|my|one|all|would|there|する|人|的|ない|こと|いる|ある|から|someone|など|is|れる|ます|者|性|よう|その|なる|up|out|ため|です|形|まし|get|年|せる|複数|system|私|この|make|time|もの|are|about|into|http|彼|was|中|take|can|www)$/;
 var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
 var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
 var re_henka = /【変化】([^【]+)/;
@@ -127,12 +128,13 @@ function storeLine(tx, line, pkey, noentry) {
 	}
 	tx.executeSql(
 		'INSERT INTO eijiro (id, entry, raw) VALUES (?,?,?);',
-		[pkey, noentry ? null : likeEscape(entry).toLowerCase(), line]
+		[pkey, noentry ? null : likeEscape(entry).toLowerCase(), likeEscape(line)]
 	);
 	for (var i = 0, l = tokens.length; i < l; i++) {
-		if (!re_dontindex.test(tokens[i])) {
-			tx.executeSql("INSERT INTO invindex VALUES (?,?);", [tokens[i], pkey]);
-		}
+		var token = tokens[i];
+		// if (length is 1 and not kanji) or (very common) then don't store ("don't-index-condition")
+		if ((token.length === 1 && !re_kanji.test(token)) || common_tokens[token] > 20000) continue;
+		tx.executeSql("INSERT INTO invindex VALUES (?,?);", [token, pkey]);
 	}
 	return [entry, tokens, line];
 }
@@ -207,7 +209,7 @@ function searchEntry(opt, callback) {
 				[likeEscape(q), likeEscape(nextWord(q)), limit, offset],
 				function sqlSuccess(tx, res) {
 					for (var i = 0, l = res.rows.length; i < res.rows.length; i++) {
-						rv.results.push(res.rows.item(i).raw);
+						rv.results.push(likeUnescape(res.rows.item(i).raw));
 					}
 					if (i === limit) rv.more = true;
 					console.log('took ' + (Date.now() - t) + ' ms');
@@ -231,7 +233,7 @@ function searchFull(opt, callback) {
 	var tokens = tokenize(query.toLowerCase());
 	console.log([query, tokens, page, id_offset]);
 	tokens = tokens
-		.filter(function(c) {return !re_dontindex.test(c)})
+		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 20000)}) // opposite of "don't-index-condition"
 		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
 	if (!tokens.length) callback(rv);
 	var join_two = (tokens.length > 1) && (common_tokens[tokens[1]] < 500);
@@ -247,15 +249,13 @@ function searchFull(opt, callback) {
 					'SELECT id, raw FROM eijiro JOIN invindex USING (id) ' + 
 						'WHERE id > ? AND invindex.token = ? AND eijiro.raw LIKE ? LIMIT ? ;',
 				join_two ?
-					[id_offset, tokens[0], tokens[1], '%'+query+'%', limit] :
-					[id_offset, tokens[0], '%'+query+'%', limit],
+					[id_offset, tokens[0], tokens[1], '%'+likeEscape(query)+'%', limit] :
+					[id_offset, tokens[0], '%'+likeEscape(query)+'%', limit],
 				function sqlSuccess(tx, res) {
 					var q = query.toLowerCase();
 					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
 						var item = rows.item(i);
-						if (item.raw.toLowerCase().indexOf(q) >= 0) {
-							rv.results.push(item.raw);
-						}
+						rv.results.push(likeUnescape(item.raw));
 						id_offset = item.id;
 					}
 					if (l === limit) rv.more = true;
