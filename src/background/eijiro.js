@@ -178,7 +178,7 @@ function storeTokens(callback) {
 					if ((n += m) >= num_to_store_at_once) {
 						finished = false;
 						i++;
-						console.log((new Date).toISOString() + ' : ' + tok);
+						console.log((new Date).toISOString() + ' : ' + token);
 						break;
 					}
 					finished = true;
@@ -294,19 +294,32 @@ function searchFull(opt, callback) {
 		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 20000)}) // opposite of "don't-index-condition"
 		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
 	if (!tokens.length) callback(rv);
-	var join_two = (tokens.length > 1) && (common_tokens[tokens[1]] < 500);
-	//console.log(tokens, tokens.map(function(c) {return common_tokens[c]}));
+	var two_idx = true;
+	if (tokens.length < 2) {
+		two_idx = false;
+	} else {
+		var c0 = common_tokens[tokens[0]] || 0;
+		two_idx = false;
+		if (c0 > 400) {
+			var c1 = common_tokens[tokens[1]] || 0;
+			if (c0 + c1 < 12000) two_idx = true;
+		}
+	}
+	//console.log(two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0}));
 
 	var t = Date.now();
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				join_two ?
-					'SELECT eijiro.id, eijiro.raw FROM eijiro JOIN invindex AS idx1 USING (id) JOIN invindex AS idx2 USING (id) ' +
-						'WHERE eijiro.id > ? AND idx1.token = ? AND idx2.token = ? AND eijiro.raw LIKE ? LIMIT ? ;' :
-					'SELECT id, raw FROM eijiro JOIN invindex USING (id) ' + 
-						'WHERE id > ? AND invindex.token = ? AND eijiro.raw LIKE ? LIMIT ? ;',
-				join_two ?
+				two_idx ?
+					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
+						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
+						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
+						'AND raw LIKE ? LIMIT ? ;' :
+					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
+						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
+						'AND raw LIKE ? LIMIT ? ;' ,
+				two_idx ?
 					[id_offset, tokens[0], tokens[1], '%'+likeEscape(query)+'%', limit] :
 					[id_offset, tokens[0], '%'+likeEscape(query)+'%', limit],
 				function sqlSuccess(tx, res) {
