@@ -133,7 +133,7 @@ function parseLine(line) {
 var KANJIs = '(?:[々〇〻\u3400-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF])+';
 function parseTranslation(text) {
 	if (/【(?:レベル|発音！?|＠|大学入試|分節|変化)】/.test(text)) return htmlEscape(text).replace(/【変化】[^【]+/, makeImplicitSearchLinks);
-	text = text.replace(/file:\S+$/,'');
+	text = text.replace(/◆file:\S+$/,'');
 	// else
 	var html = htmlEscape(text)
 		.replace(/(.*?)｛(.*?)｝/g, function($0, head, ruby) {
