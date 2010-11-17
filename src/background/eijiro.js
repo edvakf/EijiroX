@@ -294,17 +294,9 @@ function searchFull(opt, callback) {
 		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 20000)}) // opposite of "don't-index-condition"
 		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
 	if (!tokens.length) callback(rv);
-	var two_idx = true;
-	if (tokens.length < 2) {
-		two_idx = false;
-	} else {
-		var c0 = common_tokens[tokens[0]] || 0;
-		two_idx = false;
-		if (c0 > 400) {
-			var c1 = common_tokens[tokens[1]] || 0;
-			if (c0 + c1 < 12000) two_idx = true;
-		}
-	}
+	var c0 = common_tokens[tokens[0]] || 0;
+	var c1 = common_tokens[tokens[1]] || 0;
+	two_idx = (tokens.length >= 2 && c0 > 400 && c0 + c1 < 12000);
 	//console.log(two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0}));
 
 	var t = Date.now();
