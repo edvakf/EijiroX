@@ -3,6 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>EijiroX</title>
+		<script>
+			// Workaround for Opera's bug DSK-318976 (When opened a custom search engine with a hash part, location.hash is empty)
+			if (location.href.indexOf('#') >= 0 && !location.hash) location.href = location.href;
+		</script>
 		<link rel="stylesheet" href="viewer.css"/>
 		<link rel="icon" href="icons/favicon.ico"/>
 	</head>

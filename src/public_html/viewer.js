@@ -271,7 +271,7 @@ function sw() {
 }());
 
 // if hash is set already, do search
-console.log(location.hash);
+//console.log(location.hash);
 newsearch(parseQuery(location.hash.replace(/^#/, '')));
 // autofocus on Chrome is very weird, so implement by myself
 $('query').focus();
