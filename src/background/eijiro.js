@@ -93,26 +93,18 @@ function makeIndex(callback) {
 
 var re_sep = /[^一二三四五六七八九十百千万億兆一-龠々〆ヵヶぁ-んァ-ヴーｱ-ﾝﾞｰa-zA-Zａ-ｚＡ-Ｚ0-9０-９]+/g;
 var re_kanji = /[一-龠々〆ヵヶ]/;
-var re_common = /^(?:the|be|to|of|and|in|that|have|it|for|not|on|with|he|as|you|do|at|this|but|his|by|from|they|we|say|her|she|or|an|will|my|one|all|would|there)$/;
+// segment is defined in tiny_segmenter_mod.js
 function tokenize(str) {
 	var tokens = [];
 	var segments = uniq(segment(str).map(function(s) {return s.replace(re_sep, '')}));
 	for (var i = 0, l = segments.length; i < l; i++) {
 		var seg = segments[i];
-		switch(seg.length) {
-			case 0:
-				break;
-			case 1:
-				if (re_kanji.test(seg)) tokens.push(seg);
-				break;
-			default:
-				if (!re_common(seg)) tokens.push(seg);
-				break;
-		}
+		if (seg.length) tokens.push(seg);
 	}
 	return tokens;
 }
 
+var re_dontindex = /^(?:[^一-龠々〆ヵヶ]|the|be|to|of|and|in|that|have|it|for|not|on|with|he|as|you|do|at|this|but|his|by|from|they|we|say|her|she|or|an|will|my|one|all|would|there|する|人|的|ない|こと|いる|ある|から|someone|など|is|れる|ます|者|性|よう|その|なる|up|out|ため|です|形|まし|get|年|せる|複数|system|私|この|make|time|もの|are|about|into|http|彼|was|中|take|can|www)$/;
 var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
 var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
 var re_henka = /【変化】([^【]+)/;
@@ -138,11 +130,14 @@ function storeLine(tx, line, pkey, noentry) {
 		[pkey, noentry ? null : likeEscape(entry).toLowerCase(), line]
 	);
 	for (var i = 0, l = tokens.length; i < l; i++) {
-		tx.executeSql("INSERT INTO invindex VALUES (?,?);", [tokens[i], pkey]);
+		if (!re_dontindex.test(tokens[i])) {
+			tx.executeSql("INSERT INTO invindex VALUES (?,?);", [tokens[i], pkey]);
+		}
 	}
 	return [entry, tokens, line];
 }
 
+// getNextLine() is defined in public_html/chrome.js and background/opera.js
 function storeFile(type, file, callback) {
 	if (!file) return callback({nofile: true});
 	var line, i = 0;
@@ -151,7 +146,7 @@ function storeFile(type, file, callback) {
 	function _store() {
 		db.transaction(
 			function transaction(tx) {
-				while(line = file.getNextLine()) { // getNextLine() is defined in public_html/chrome.js and background/opera.js
+				while(line = file.getNextLine()) {
 					var r = storeLine(tx, line, ++primary_key, noentry);
 					if (++i % 50000 === 0) {
 						console.log(r);
@@ -227,6 +222,7 @@ function searchEntry(opt, callback) {
 	)
 }
 
+// common_tokens is defined in common_tokens.js
 function searchFull(opt, callback) {
 	var query = opt.query;
 	var page = opt.page;
@@ -234,27 +230,25 @@ function searchFull(opt, callback) {
 	var rv = {query:query, page:page, more:false, full:true, results:[]};
 	var tokens = tokenize(query.toLowerCase());
 	console.log([query, tokens, page, id_offset]);
+	tokens = tokens
+		.filter(function(c) {return !re_dontindex.test(c)})
+		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
 	if (!tokens.length) callback(rv);
-	var longesttoken = '', longesttoken2 = '';
-	for (var i = 0, l = tokens.length; i < l; i++) {
-		if (longesttoken.length <= tokens[i].length) {
-			longesttoken2 = longesttoken;
-			longesttoken = tokens[i];
-		}
-	}
+	var join_two = (tokens.length > 1) && (common_tokens[tokens[1]] < 500);
+	//console.log(tokens, tokens.map(function(c) {return common_tokens[c]}));
 
 	var t = Date.now();
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				longesttoken2.length ?
+				join_two ?
 					'SELECT eijiro.id, eijiro.raw FROM eijiro JOIN invindex AS idx1 USING (id) JOIN invindex AS idx2 USING (id) ' +
-						'WHERE eijiro.id > ? AND idx1.token = ? AND idx2.token = ? LIMIT ? ;' :
+						'WHERE eijiro.id > ? AND idx1.token = ? AND idx2.token = ? AND eijiro.raw LIKE ? LIMIT ? ;' :
 					'SELECT id, raw FROM eijiro JOIN invindex USING (id) ' + 
-						'WHERE id > ? AND invindex.token = ? LIMIT ? ;',
-				longesttoken2.length ?
-					[id_offset, longesttoken, longesttoken2, limit] :
-					[id_offset, longesttoken, limit],
+						'WHERE id > ? AND invindex.token = ? AND eijiro.raw LIKE ? LIMIT ? ;',
+				join_two ?
+					[id_offset, tokens[0], tokens[1], '%'+query+'%', limit] :
+					[id_offset, tokens[0], '%'+query+'%', limit],
 				function sqlSuccess(tx, res) {
 					var q = query.toLowerCase();
 					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
