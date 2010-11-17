@@ -30,6 +30,8 @@ function newsearch(opt) {
 
 	query_string = serializeToQuery(opt);
 
+	setHashDelay.cancel();
+
 	searchDelay(function() {
 		searchRequest(opt, searchFinished);
 		$('loading').className = ''; // show loading icon
@@ -308,6 +310,7 @@ function DelayHashChange (hashchange, wait) {
 		timer = setTimeout(setHash, wait);
 		reallySetHash = true;
 	}
+	doAction.cancel = function() {timer = clearTimeout(timer)};
 	function _hashchange(e) {
 		if (timer) reallySetHash = false;
 		hashchange(e);
