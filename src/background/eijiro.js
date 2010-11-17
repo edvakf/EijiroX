@@ -1,6 +1,8 @@
 var db = openDatabase('dictionary', '1.0', 'eijiro dictionary', 1024*1024*1024);
 var primary_key = 0; // id for all entries are serial numbers
 
+var num_to_store_at_once = 50000;
+
 var debug = true;
 if (!debug) {
 	console = {log:function(){}};
@@ -12,7 +14,7 @@ function store(files, callback) {
 	var eijiros = {eiji: '英辞郎', ryaku: '略語郎', waei: '和英辞郎', reiji: '例辞郎'};
 	primary_key = 0;
 	callback({progress: true, message: 'データベース初期化中。'});
-	console.log('creating tables');
+	console.log((new Date).toISOString() + ' : ' + 'creating tables');
 	createTables(function _storeFile(status) {
 		if (status.error) {
 			callback(status);
@@ -22,28 +24,39 @@ function store(files, callback) {
 			return;
 		}
 		if (status.nofile) {
-			console.log(filename + ' not selected');
+			console.log((new Date).toISOString() + ' : ' + filename + ' not selected');
 			callback({progress: true, message: eijiros[filename] + ' : ファイルが選択されていません。'});
 		} else {
 			if (filename) {
-				console.log(filename + ' finished');
+				console.log((new Date).toISOString() + ' : ' + filename + ' finished');
 				callback({progress: true, message: eijiros[filename] + ' : 保存完了。'});
 			}
 		}
 		filename = filenames.shift();
 		if (filename) {
-			console.log('storing: ' + filename);
+			console.log((new Date).toISOString() + ' : ' + 'storing: ' + filename);
 			callback({progress: true, message: eijiros[filename] + ' : 保存開始。'});
 			storeFile(filename, files[filename], _storeFile);
 		} else {
-			console.log('making index');
-			callback({progress: true, message: 'インデックス作成中。時間がかかることがあります。'});
-			makeIndex(function() {
-				console.log('indexing done');
-				callback({end: true, message: 'データベース作成完了。おつかれさまでした。'});
-			});
+			finalize();
 		}
 	});
+	function finalize() {
+		console.log((new Date).toISOString() + ' : ' + 'storing tokens');
+		callback({progress: true, message: '手動インデックス中。時間がかかることがあります。'});
+		storeTokens(function(status) {
+			if (status.error) {
+				callback({error:true, message:status.message});
+			} else if (status.end) {
+				console.log((new Date).toISOString() + ' : ' + 'making index');
+				callback({progress: true, message: '自動インデックス中。'});
+				makeIndex(function() {
+					console.log((new Date).toISOString() + ' : ' + 'indexing done');
+					callback({end: true, message: 'データベース作成完了。おつかれさまでした。'});
+				});
+			}
+		});
+	}
 }
 
 function createTables(callback) {
@@ -134,9 +147,54 @@ function storeLine(tx, line, pkey, noentry) {
 		var token = tokens[i];
 		// if (length is 1 and not kanji) or (very common) then don't store ("don't-index-condition")
 		if ((token.length === 1 && !re_kanji.test(token)) || common_tokens[token] > 20000) continue;
-		tx.executeSql("INSERT INTO invindex VALUES (?,?);", [token, pkey]);
+		if (!tokens_pending[token]) tokens_pending[token] = [];
+		tokens_pending[token].push(pkey);
 	}
-	return [entry, tokens, line];
+}
+
+var tokens_pending = {__proto__:null};
+
+function storeTokens(callback) {
+	var tokens = [];
+	for (var x in tokens_pending) {
+		tokens.push(x);
+	}
+	tokens = tokens.sort();
+	var i = 0, l = tokens.length, n = 0;
+	var finished = true;
+
+	function _storeTokens() {
+		db.transaction(
+			function transaction(tx) {
+				n = 0;
+				for (; i < l; i++) {
+					var token = tokens[i];
+					var pkeys = tokens_pending[token];
+					for (var j = 0, m = pkeys.length; j < m; j++) {
+						pkey = pkeys[j];
+						tx.executeSql("INSERT INTO invindex VALUES (?,?);", [token, pkey]);
+					}
+					delete tokens_pending[token];
+					if ((n += m) >= num_to_store_at_once) {
+						finished = false;
+						i++;
+						console.log((new Date).toISOString() + ' : ' + tok);
+						break;
+					}
+					finished = true;
+				}
+			},
+			function transactionError(err) {
+				console.log(err);
+				callback({error: true, message: err.message});
+			},
+			function transactionSuccess(tx) {
+				if (finished) return callback({end: true});
+				setTimeout(_storeTokens, 100);
+			}
+		);
+	}
+	_storeTokens();
 }
 
 // getNextLine() is defined in public_html/chrome.js and background/opera.js
@@ -149,9 +207,9 @@ function storeFile(type, file, callback) {
 		db.transaction(
 			function transaction(tx) {
 				while(line = file.getNextLine()) {
-					var r = storeLine(tx, line, ++primary_key, noentry);
-					if (++i % 50000 === 0) {
-						console.log(r);
+					storeLine(tx, line, ++primary_key, noentry);
+					if (++i % num_to_store_at_once === 0) {
+						console.log((new Date).toISOString() + ' : ' + line);
 						callback({progress: true, message: i});
 						finished = false;
 						break;
@@ -293,3 +351,4 @@ function nextWord(str) {// str is a non-empty string
 function uniq(ary) {
 	return ary.filter(function(a, i) {return ary.indexOf(a) === i});
 }
+
