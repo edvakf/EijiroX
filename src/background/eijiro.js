@@ -141,7 +141,7 @@ function storeLine(tx, line, pkey, noentry) {
 	}
 	tx.executeSql(
 		'INSERT INTO eijiro (id, entry, raw) VALUES (?,?,?);',
-		[pkey, noentry ? null : likeEscape(entry).toLowerCase(), likeEscape(line)]
+		[pkey, noentry ? null : entry.toLowerCase(), line]
 	);
 	for (var i = 0, l = tokens.length; i < l; i++) {
 		var token = tokens[i];
@@ -264,10 +264,10 @@ function searchEntry(opt, callback) {
 				'SELECT raw FROM eijiro ' +
 				'WHERE entry >= ? AND entry < ? ' + 
 				'LIMIT ? OFFSET ?;', 
-				[likeEscape(q), likeEscape(nextWord(q)), limit, offset],
+				[q, nextWord(q), limit, offset],
 				function sqlSuccess(tx, res) {
 					for (var i = 0, l = res.rows.length; i < res.rows.length; i++) {
-						rv.results.push(likeUnescape(res.rows.item(i).raw));
+						rv.results.push(res.rows.item(i).raw);
 					}
 					if (i === limit) rv.more = true;
 					console.log('took ' + (Date.now() - t) + ' ms');
@@ -315,18 +315,18 @@ function searchFull(opt, callback) {
 					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
 						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
 						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-						'AND raw LIKE ? LIMIT ? ;' :
+						'AND raw LIKE ? ESCAPE ? LIMIT ? ;' :
 					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
 						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-						'AND raw LIKE ? LIMIT ? ;' ,
+						'AND raw LIKE ? ESCAPE ? LIMIT ? ;' ,
 				two_idx ?
-					[id_offset, tokens[0], tokens[1], '%'+likeEscape(query)+'%', limit] :
-					[id_offset, tokens[0], '%'+likeEscape(query)+'%', limit],
+					[id_offset, tokens[0], tokens[1], '%'+likeEscape(query)+'%', '@',limit] :
+					[id_offset, tokens[0], '%'+likeEscape(query)+'%', '@',limit],
 				function sqlSuccess(tx, res) {
 					var q = query.toLowerCase();
 					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
 						var item = rows.item(i);
-						rv.results.push(likeUnescape(item.raw));
+						rv.results.push(item.raw);
 						id_offset = item.id;
 					}
 					if (l === limit) rv.more = true;
@@ -345,16 +345,8 @@ function searchFull(opt, callback) {
 
 
 /* utils */
-function sqlEscape(text) {
-	return (text+'').replace(/'/g,"''");
-}
-
 function likeEscape(text) {
-	return (text+'').replace(/&/, '&amp;').replace(/%/g, '&#37;').replace(/_/g, '&#95;');
-}
-
-function likeUnescape(text) {
-	return (text+'').replace(/&#95;/g, '_').replace(/&#37;/g, '%').replace(/&amp;/g, '&');
+	return (text+'').replace(/@/g, '@@').replace(/%/g, '@%').replace(/_/g, '@_');
 }
 
 function nextWord(str) {// str is a non-empty string
