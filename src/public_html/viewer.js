@@ -200,7 +200,11 @@ function openSearchLink(e) {
 		e.preventDefault();
 		e.stopPropagation();
 		var query = e.target.title;
+<<<<<<< HEAD
+		if ($('query').value !== query && query) $('query').value = query;
+=======
 		if ($('query').value !== query) $('query').value = query;
+>>>>>>> origin/master
 		newsearch({query: query});
 	}
 }
@@ -278,7 +282,11 @@ function sw() {
 
 	console.log(location.hash);
 	var q = parseQuery(location.hash.replace(/^#/, ''));
+<<<<<<< HEAD
+	if ($('query').value !== q.query && q.query) $('query').value = q.query;
+=======
 	if ($('query').value !== q.query) $('query').value = q.query;
+>>>>>>> origin/master
 	newsearch(q);
 }());
 
