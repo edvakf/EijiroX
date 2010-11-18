@@ -106,7 +106,7 @@ function makeIndex(callback) {
 	);
 }
 
-var re_sep = /[^一二三四五六七八九十百千万億兆一-龠々〆ヵヶぁ-んァ-ヴーｱ-ﾝﾞｰa-zA-Zａ-ｚＡ-Ｚ0-9０-９]+/g;
+var re_sep = /[^一-龠々〆ヵヶぁ-んァ-ヴーｱ-ﾝﾞｰa-zA-Zａ-ｚＡ-Ｚ0-9０-９]+/g;
 var re_kanji = /[一-龠々〆ヵヶ]/;
 // segment is defined in tiny_segmenter_mod.js
 function tokenize(str) {
@@ -289,7 +289,7 @@ function searchFull(opt, callback) {
 	var id_offset = opt.id_offset || 0;
 	var rv = {query:query, page:page, more:false, full:true, results:[]};
 	var tokens = tokenize(query.toLowerCase());
-	console.log([query, tokens, page, id_offset]);
+	console.log([query, tokens, page, id_offset].toString());
 	tokens = tokens
 		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 20000)}) // opposite of "don't-index-condition"
 		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
@@ -297,7 +297,7 @@ function searchFull(opt, callback) {
 	var c0 = common_tokens[tokens[0]] || 0;
 	var c1 = common_tokens[tokens[1]] || 0;
 	two_idx = (tokens.length >= 2 && c0 > 400 && c0 + c1 < 12000);
-	//console.log(two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0}));
+	console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
 
 	var t = Date.now();
 	db.transaction(
