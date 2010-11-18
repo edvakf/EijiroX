@@ -21,7 +21,6 @@ var query_string; // serialized query option (will become URL fragment under cer
 function newsearch(opt) {
 	var undef;
 	if (opt.query === undef) return;
-	if ($('query').value !== opt.query) $('query').value = opt.query;
 
 	opt.query = opt.query.replace(/^▽|▼/g, ''); // for SKK
 	if (!opt.page) opt.page = 1;
@@ -200,7 +199,9 @@ function openSearchLink(e) {
 	if (e.target.className.indexOf('searchlink') >= 0 && e.target.title) {
 		e.preventDefault();
 		e.stopPropagation();
-		newsearch({query: e.target.title});
+		var query = e.target.title;
+		if ($('query').value !== query) $('query').value = query;
+		newsearch({query: query});
 	}
 }
 
@@ -271,10 +272,15 @@ function sw() {
 }());
 
 // if hash is set already, do search
-//console.log(location.hash);
-newsearch(parseQuery(location.hash.replace(/^#/, '')));
-// autofocus on Chrome is very weird, so implement by myself
-$('query').focus();
+(function init() {
+	// autofocus on Chrome is very weird, so implement by myself
+	$('query').focus();
+
+	console.log(location.hash);
+	var q = parseQuery(location.hash.replace(/^#/, ''));
+	if ($('query').value !== q.query) $('query').value = q.query;
+	newsearch(q);
+}());
 
 
 // Utility
