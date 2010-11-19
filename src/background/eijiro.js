@@ -119,7 +119,7 @@ function tokenize(str) {
 	return tokens;
 }
 
-var re_line = /■(.*?)(?:  {.*?})? : ＝?(.*)/;
+var re_line = /■(.*?)(?:  ?{.*?})? : ＝?(.*)/;
 var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
 var re_henka = /【変化】([^【]+)/;
 var re_break = /(?:●|◆(?:file:\S+)?|【.+?】|{.*?}|《.+?》|〈.+?〉)+/g;
@@ -297,7 +297,7 @@ function searchFull(opt, callback) {
 	var c0 = common_tokens[tokens[0]] || 0;
 	var c1 = common_tokens[tokens[1]] || 0;
 	two_idx = (tokens.length >= 2 && c0 > 400 && c0 + c1 < 12000);
-	console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
+	//console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
 
 	var t = Date.now();
 	db.transaction(
