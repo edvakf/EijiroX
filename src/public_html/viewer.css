@@ -29,21 +29,21 @@ h1 {
 
 #query {
 	width: 100%;
-	max-width: 40em;
-}
-
-#fulltext {
+	max-width: 50em;
 }
 
 #results {
 	font-size: small;
+	margin-left: auto;
+	margin-right:auto;
+	max-width: 50em;
 }
 
 #results.largefont {
 	font-size: medium;
 }
 
-#results.noruby rp, #results.noruby rt {
+#results.noruby rp, #results.noruby rt, #results.noruby .ruby{
 	display:none;
 }
 
@@ -61,15 +61,41 @@ h1 {
 	text-decoration: underline;
 }
 
+#results .entry-box {
+	margin-left: 1em;
+}
+
+#results .entry {
+	font-weight: bold;
+}
+
+#results .kind {
+	background-color:#f8f8f8;
+	font-size:80%;
+	margin-left:0.5em;
+	padding:0.1em;
+	border:solid #ccc 1px;
+}
+
+#results dd, dt {
+	padding-top: 0.1em;
+	padding-bottom: 0.1em;
+}
+
+#results .entry-box .bracket, #results .entry-box .separator {
+	display: none;
+}
+
+#results .translation {
+	display:list-item;
+	list-style-type:square;
+}
+
+#results .phonetic {
+	font-family: Helvetica, Arial, sans-serif;
+}
+
 #loading {
 	text-align: center;
 	width: 100%;
 }
-
-#tinydiv {
-	position: absolute;
-	bottom: -1px;
-	height: 1px;
-	width: 1px;
-}
-

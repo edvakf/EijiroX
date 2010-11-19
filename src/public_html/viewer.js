@@ -43,6 +43,8 @@ function hashchange() {
 	var hash = location.hash.replace(/^#/, '');console.log(hash);
 	if (hash === query_string) return;
 	var opt = parseQuery(hash);
+	opt.page = 1;
+	if ($('query').value !== opt.query && opt.query) $('query').value = opt.query;
 	newsearch(opt);
 }
 
@@ -87,22 +89,31 @@ function scroll(e) {
 function select(e) {
 	if (document.activeElement === $('query')) return;
 	var sel = (document.getSelection() + '').replace(/^\s+|\s+$/g, '');
-	if (sel !== '') $('query').value = sel;
+	if (sel) {
+		$('query').value = sel;
+	} else {
+		var opt = parseQuery(query_string);
+		if ($('query').value !== opt.query) $('query').value = opt.query;
+	}
 }
 
 
 // View
 function showResults(res) {
-	var ul = $('res-list');
+	var dl = $('res-list');
 	var m = $('loading');
-	ul.className = 'hidden';
 	if (res.page === 1) {
-		ul.innerHTML = '';
+		dl.innerHTML = '';
 	}
-	eijiroToListItems(res.results).forEach(function(li) {
-		ul.appendChild(li);
-	});
-	ul.className = '';
+
+	var html = res.results.map(function(line) {
+		return parseLine(line);
+	}).join('\n');
+	var range = document.createRange();
+	range.selectNodeContents(dl);
+	var df = range.createContextualFragment(html);
+	dl.appendChild(df);
+
 	if (res.more) {
 		m.className = '';
 		m.title = 'page ' + (res.page + 1);
@@ -112,34 +123,65 @@ function showResults(res) {
 	}
 }
 
-function eijiroToListItems(lines) {
-	return lines.map(function(r) {
-		var li = document.createElement('li');
-		li.innerHTML =  parseLine(r);
-		return li;
-	});
-}
-
+var re_line = /■(.*?)(?:  ?{(.*?)})? : (.*)/;
+var re_sep = /■・|●/;
 function parseLine(line) {
-	var m = /■(.*?)(  {.*?})? : (.*)/.exec(line);
-	if (!m)	return htmlEscape(m);
-	var n = m[3].split('■・');
-	var p = n.shift();
-	return '<span class="word">' + makeImplicitSearchLinks(htmlEscape(m[1])) + '</span>' + 
-		(!m[2] ? '' : '  <span class="kind">' + htmlEscape(m[2].slice(2)) + '</span>') + ' : ' +
-		'<span class="translation">' + parseTranslation(p) + '</span>' +
-		(!n.length ? '' : '<ul>' + n.map(function(q) {return '<li>' + parseTranslation(q) + '</li>';}).join('\n') + '</ul>');
+	var m = re_line.exec(line);
+	if (!m) return htmlEscape(line);
+	var word = m[1];
+	var kind = m[2];
+	var trans = m[3].split(re_sep);
+	return '<dt class="entry-box">' +
+			'<span class="entry">' + makeImplicitSearchLinks(htmlEscape(word)) + "</span>" +
+			(!kind ? '' : '<span class="kind"><span class="bracket">{</span>' + htmlEscape(kind) + '<span class="bracket">}</span></span>') + 
+			' <span class="separator">:</span> ' +
+		'</dt>' +
+		trans.map(function(t) {
+				return '<dd class="translation">' + parseTranslation(t) + '</dd>';
+			}).join('');
 }
 
-var KANJIs = '(?:[々〇〻\u3400-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF])+';
+var re_kanji = '(?:[々〇〻\u3400-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF])+'; // http://tama-san.com/?p=196
+var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
+var re_henka = /【変化】[^【]+/;
+var re_hatsuon = /(【発音！?】)([^【]+)/;
+var re_hatsuon_sep = / *(、|《.*?》)+ */;
+var re_redirect = /<→(.*?)>/;
+var re_file = /◆file:\S+$/;
+var re_ruby = /(.*?)｛(.*?)｝/g;
+var re_okuri = /(.*?)([ぁ-ん]+)$/;
+var re_additional = /(（.*?）)/;
+var re_synonym = /(【(?:[反対名類動同略]|参考|語源|標準英語)】)([-a-zA-Z'.? ;]+)/g;
+var re_semicolon = / *; */;
+var re_url = /【URL】([^ ]+(?: ; (?:[^ ]+))*)/g;
 function parseTranslation(text) {
-	if (/【(?:レベル|発音！?|＠|大学入試|分節|変化)】/.test(text)) return htmlEscape(text).replace(/【変化】[^【]+/, makeImplicitSearchLinks);
-	text = text.replace(/◆file:\S+$/,'');
+	if (re_trivial.test(text)) {
+		return htmlEscape(text)
+			.replace(re_henka, makeImplicitSearchLinks)
+			.replace(re_hatsuon, function(m0, m1, m2) {
+				return m1 + m2.split(re_hatsuon_sep).map(function(l, i) {
+						if (i % 2 !== 0) return l;
+						return convertPhonetic(l);
+					}).join('');
+			});
+	}
+	if (re_redirect.test(text)) {
+		return text.replace(re_redirect, function(_, word) {
+				return '&lt;→<a title="'+htmlEscape(word)+'" href="#" class="explicit searchlink">'+htmlEscape(word)+'</a>&gt;'
+			});
+	}
+	if (text.indexOf('＝') === 0) {
+		return '＝' + text.slice(1).split(re_semicolon).map(function(l) {
+				return '<a href="#" title="' + htmlEscape(l) + '" class="explicit searchlink">' + htmlEscape(l) + '</a>';
+			}).join(' ; ');
+	}
+
+	text = text.replace(re_file,'');
 	// else
 	var html = htmlEscape(text)
-		.replace(/(.*?)｛(.*?)｝/g, function($0, head, ruby) {
+		.replace(re_ruby, function($0, head, ruby) {
 			var m, okuri = '', kanji;
-			if (m = head.match(/(.*?)([ぁ-ん]+)$/)) { // TODO: check regexp
+			if (m = head.match(re_okuri)) {
 				// 心得る｛こころえる｝ -> <ruby>心得<rp>｛</rp><rt>こころえ</rt><rp>｝</rp></ruby>る
 				okuri = m[2]; // === 'る'
 				var l = ruby.length - okuri.length; // === 'こころえ'.length === 4
@@ -147,42 +189,46 @@ function parseTranslation(text) {
 					head = m[1]; // '心得'
 					ruby = ruby.slice(0, l); // 'こころえる'.slice(0, 4)
 				} else {
-					// TODO
+					// maybe this case does not exist
 					console.log(text);
 					return head + '<span class="ruby">｛' + ruby + '｝</span>';
 				}
 			}
 			// "density" => 密集（度）｛みっしゅう（ど）｝
 			var re = RegExp('(.*?)(' + 
-				ruby.split(/(（.*?）)/).map(function(m){
-					return !m.length ? '' : 
-						m.charAt(0) === '（' ? '（' + KANJIs + '）' : 
-						KANJIs;
+				ruby.split(re_additional).map(function(m){
+					return !m.length ? '' : (m.charAt(0) === '（' ? '（' + re_kanji + '）' : re_kanji);
 				}).join('') + ')$'
 			);
-			if (m = head.match(re)) { // http://tama-san.com/?p=196
+			if (m = head.match(re)) {
 				head = m[1];
 				kanji = m[2];
 				return head + '<ruby>' + kanji + '<rp>｛</rp><rt>' + ruby + '</rt><rp>｝</rp></ruby>' + okuri;
 			} else {
-				// TODO
+				// maybe this case does not exist
 				console.log(text);
 				return head + kanji + '<span class="ruby">｛' + ruby + '｝</span>' + okuri;
 			}
 		})
-		.replace(/&lt;→(.*?)&gt;/g, '&lt;→<a title="$1" href="#" class="explicit searchlink">$1</a>&gt;')
-		.replace(/(【(?:[反対名類動同略]|参考|語源)】)([-a-zA-Z'.? ;]+)/g, function($0, $1, $2) {
-			return $1 + $2.split(/ *; */).map(function(l) {
+		.replace(re_synonym, function($0, $1, $2) {
+			return $1 + $2.split(re_semicolon).map(function(l) {
 				return '<a title="' + l + '" href="#" class="explicit searchlink">' + l + '</a>';
 			}).join(' ; ');
 		})
-		.replace(/【URL】([^ ]+(?: ; (?:[^ ]+))*)/g, function($0, $1) {
-			return '【URL】' + $1.split(/ *; */).map(function(l) {
+		.replace(re_url, function($0, $1) {
+			return '【URL】' + $1.split(re_semicolon).map(function(l) {
 					return '<a href="' + l + '">' + l + '</a>';
 				}).join(' ; ');
 		});
 	return makeImplicitSearchLinks(html);
 
+}
+
+var phonetic = {'t∫':'ʧ', 'dз':'ʤ', 'ae':'æ', '∫':'ʃ', 'η':'ŋ', 'з':'ʒ', 'δ':'ð', '\'':'\u0301', '`':'\u0300', 'α':'ɑ', 'э':'ə', 'Λ':'ʌ', 'ｏ':'ɔ', ':':'ː', '(':'<i>', ')':'</i>'};
+var re_phonetic = /(t∫|dз|ae|[∫ηзδ'`αэΛｏ:()])/g;
+function convertPhonetic(text) {
+	if (!text) return '';
+	return '<span class="phonetic">' + text.replace(re_phonetic, function(m) {return phonetic[m];}) + '</span>';
 }
 
 function makeImplicitSearchLinks(html) {
@@ -200,11 +246,7 @@ function openSearchLink(e) {
 		e.preventDefault();
 		e.stopPropagation();
 		var query = e.target.title;
-<<<<<<< HEAD
 		if ($('query').value !== query && query) $('query').value = query;
-=======
-		if ($('query').value !== query) $('query').value = query;
->>>>>>> origin/master
 		newsearch({query: query});
 	}
 }
@@ -281,13 +323,9 @@ function sw() {
 	$('query').focus();
 
 	console.log(location.hash);
-	var q = parseQuery(location.hash.replace(/^#/, ''));
-<<<<<<< HEAD
-	if ($('query').value !== q.query && q.query) $('query').value = q.query;
-=======
-	if ($('query').value !== q.query) $('query').value = q.query;
->>>>>>> origin/master
-	newsearch(q);
+	var opt = parseQuery(location.hash.replace(/^#/, ''));
+	if ($('query').value !== opt.query && opt.query) $('query').value = opt.query;
+	newsearch(opt);
 }());
 
 

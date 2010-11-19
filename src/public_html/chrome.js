@@ -78,7 +78,11 @@ chrome.tabs.getSelected(null, function(tab) { // getCurrent doesn't work. (maybe
 });
 
 chrome.extension.onRequest.addListener(function(req) {
-	if (req.query) newsearch({query: req.query});
+	// if the popup size is changed while it's still popping up, it looks ugly, so timeout here
+	setTimeout(function() {
+		$('query').value = req.query;
+		if (req.query) newsearch({query: req.query});
+	}, 0.4);
 });
 
 
