@@ -68,11 +68,13 @@ h1 {
 #results .entry {
 	font-weight: bold;
 }
-
 #results .kind {
+	margin-left:0.5em;
+}
+
+#results .kind, #results .info {
 	background-color:#f8f8f8;
 	font-size:80%;
-	margin-left:0.5em;
 	padding:0.1em;
 	border:solid #ccc 1px;
 }
@@ -82,7 +84,7 @@ h1 {
 	padding-bottom: 0.1em;
 }
 
-#results .entry-box .bracket, #results .entry-box .separator {
+#results .bracket, #results .entry-box .separator {
 	display: none;
 }
 

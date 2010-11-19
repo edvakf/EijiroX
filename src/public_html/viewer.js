@@ -148,21 +148,24 @@ var re_hatsuon = /(【発音！?】)([^【]+)/;
 var re_hatsuon_sep = / *(、|《.*?》)+ */;
 var re_redirect = /<→(.*?)>/;
 var re_file = /◆file:\S+$/;
-var re_ruby = /(.*?)｛(.*?)｝/g;
-var re_okuri = /(.*?)([ぁ-ん]+)$/;
-var re_additional = /(（.*?）)/;
 var re_synonym = /(【(?:[反対名類動同略]|参考|語源|標準英語)】)([-a-zA-Z'.? ;]+)/g;
 var re_semicolon = / *; */;
 var re_url = /【URL】([^ ]+(?: ; (?:[^ ]+))*)/g;
+var re_bracket = /([【〈])(.*?)([】〉])/g;
 function parseTranslation(text) {
 	if (re_trivial.test(text)) {
 		return htmlEscape(text)
 			.replace(re_henka, makeImplicitSearchLinks)
-			.replace(re_hatsuon, function(m0, m1, m2) {
-				return m1 + m2.split(re_hatsuon_sep).map(function(l, i) {
+			.replace(re_hatsuon, function($0, $1, $2) {
+				return $1 + $2.split(re_hatsuon_sep).map(function(l, i) {
 						if (i % 2 !== 0) return l;
 						return convertPhonetic(l);
 					}).join('');
+			})
+			.replace(re_bracket, function($0, $1, $2, $3) {
+				return ' <span class="info"><span class="bracket">' + $1 +
+					'</span>' + ($2 === '＠' ? 'カナ' : $2) + '<span class="bracket">' +
+					$3 + '</span></span> ';
 			});
 	}
 	if (re_redirect.test(text)) {
@@ -178,38 +181,7 @@ function parseTranslation(text) {
 
 	text = text.replace(re_file,'');
 	// else
-	var html = htmlEscape(text)
-		.replace(re_ruby, function($0, head, ruby) {
-			var m, okuri = '', kanji;
-			if (m = head.match(re_okuri)) {
-				// 心得る｛こころえる｝ -> <ruby>心得<rp>｛</rp><rt>こころえ</rt><rp>｝</rp></ruby>る
-				okuri = m[2]; // === 'る'
-				var l = ruby.length - okuri.length; // === 'こころえ'.length === 4
-				if (ruby.lastIndexOf(okuri) === l) {
-					head = m[1]; // '心得'
-					ruby = ruby.slice(0, l); // 'こころえる'.slice(0, 4)
-				} else {
-					// maybe this case does not exist
-					console.log(text);
-					return head + '<span class="ruby">｛' + ruby + '｝</span>';
-				}
-			}
-			// "density" => 密集（度）｛みっしゅう（ど）｝
-			var re = RegExp('(.*?)(' + 
-				ruby.split(re_additional).map(function(m){
-					return !m.length ? '' : (m.charAt(0) === '（' ? '（' + re_kanji + '）' : re_kanji);
-				}).join('') + ')$'
-			);
-			if (m = head.match(re)) {
-				head = m[1];
-				kanji = m[2];
-				return head + '<ruby>' + kanji + '<rp>｛</rp><rt>' + ruby + '</rt><rp>｝</rp></ruby>' + okuri;
-			} else {
-				// maybe this case does not exist
-				console.log(text);
-				return head + kanji + '<span class="ruby">｛' + ruby + '｝</span>' + okuri;
-			}
-		})
+	var html = convertRuby(htmlEscape(text))
 		.replace(re_synonym, function($0, $1, $2) {
 			return $1 + $2.split(re_semicolon).map(function(l) {
 				return '<a title="' + l + '" href="#" class="explicit searchlink">' + l + '</a>';
@@ -219,9 +191,47 @@ function parseTranslation(text) {
 			return '【URL】' + $1.split(re_semicolon).map(function(l) {
 					return '<a href="' + l + '">' + l + '</a>';
 				}).join(' ; ');
-		});
+		})
+		.replace(re_bracket,' <span class="info"><span class="bracket">$1</span>$2<span class="bracket">$3</span></span> ');
 	return makeImplicitSearchLinks(html);
 
+}
+
+var re_ruby = /(.*?)｛(.*?)｝/g;
+var re_okuri = /(.*?)([ぁ-ん]+)$/;
+var re_additional = /(（.*?）)/;
+function convertRuby(html) {
+	return html.replace(re_ruby, function($0, head, ruby) {
+		var m, okuri = '', kanji;
+		if (m = head.match(re_okuri)) {
+			// 心得る｛こころえる｝ -> <ruby>心得<rp>｛</rp><rt>こころえ</rt><rp>｝</rp></ruby>る
+			okuri = m[2]; // === 'る'
+			var l = ruby.length - okuri.length; // === 'こころえ'.length === 4
+			if (ruby.lastIndexOf(okuri) === l) {
+				head = m[1]; // '心得'
+				ruby = ruby.slice(0, l); // 'こころえる'.slice(0, 4)
+			} else {
+				// maybe this case does not exist
+				console.log(text);
+				return head + '<span class="ruby">｛' + ruby + '｝</span>';
+			}
+		}
+		// "density" => 密集（度）｛みっしゅう（ど）｝
+		var re = RegExp('(.*?)(' + 
+			ruby.split(re_additional).map(function(m){
+				return !m.length ? '' : (m.charAt(0) === '（' ? '（' + re_kanji + '）' : re_kanji);
+			}).join('') + ')$'
+		);
+		if (m = head.match(re)) {
+			head = m[1];
+			kanji = m[2];
+			return head + '<ruby>' + kanji + '<rp>｛</rp><rt>' + ruby + '</rt><rp>｝</rp></ruby>' + okuri;
+		} else {
+			// maybe this case does not exist
+			console.log(text);
+			return head + kanji + '<span class="ruby">｛' + ruby + '｝</span>' + okuri;
+		}
+	})
 }
 
 var phonetic = {'t∫':'ʧ', 'dз':'ʤ', 'ae':'æ', '∫':'ʃ', 'η':'ŋ', 'з':'ʒ', 'δ':'ð', '\'':'\u0301', '`':'\u0300', 'α':'ɑ', 'э':'ə', 'Λ':'ʌ', 'ｏ':'ɔ', ':':'ː', '(':'<i>', ')':'</i>'};
