@@ -119,26 +119,13 @@ function tokenize(str) {
 	return tokens;
 }
 
-var re_line = /■(.*?)(?:  ?{.*?})? : ＝?(.*)/;
-var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化)】/;
-var re_henka = /【変化】([^【]+)/;
-var re_break = /(?:●|◆(?:file:\S+)?|【.+?】|{.*?}|《.+?》|〈.+?〉)+/g;
-var re_delete = /(?:[\x00-\x1f\x7f-\xa0]|｛.+?｝)+/g;
+var re_line = /■(.*?)(?:  ?{.*?})? : /;
 function storeLine(tx, line, pkey, noentry) {
 	var tokens;
 	var m = line.match(re_line);
 	if (!m) return;
 	var entry = m[1], translation = m[2];
-	if (re_trivial.test(translation)) {
-		var n;
-		if (n = translation.match(re_henka)) {
-			tokens = [entry].concat(n[1].split('、'));
-		} else {
-			tokens = [entry];
-		}
-	} else {
-		tokens = tokenize((entry + ' ' + translation).replace(re_delete, '').replace(re_break, ' ').toLowerCase());
-	}
+	tokens = tokenize(entry);
 	tx.executeSql(
 		'INSERT INTO eijiro (id, entry, raw) VALUES (?,?,?);',
 		[pkey, noentry ? null : entry.toLowerCase(), line]
@@ -297,7 +284,7 @@ function searchFull(opt, callback) {
 	var c0 = common_tokens[tokens[0]] || 0;
 	var c1 = common_tokens[tokens[1]] || 0;
 	two_idx = (tokens.length >= 2 && c0 > 400 && c0 + c1 < 12000);
-	//console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
+	console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
 
 	var t = Date.now();
 	db.transaction(
