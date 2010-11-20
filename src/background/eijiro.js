@@ -125,7 +125,7 @@ function storeLine(tx, line, pkey, noentry) {
 	var m = line.match(re_line);
 	if (!m) return;
 	var entry = m[1], translation = m[2];
-	tokens = tokenize(entry);
+	tokens = tokenize(entry.toLowerCase());
 	tx.executeSql(
 		'INSERT INTO eijiro (id, entry, raw) VALUES (?,?,?);',
 		[pkey, noentry ? null : entry.toLowerCase(), line]
@@ -133,7 +133,7 @@ function storeLine(tx, line, pkey, noentry) {
 	for (var i = 0, l = tokens.length; i < l; i++) {
 		var token = tokens[i];
 		// if (length is 1 and not kanji) or (very common) then don't store ("don't-index-condition")
-		if ((token.length === 1 && !re_kanji.test(token)) || common_tokens[token] > 20000) continue;
+		if ((token.length === 1 && !re_kanji.test(token)) || common_tokens[token] > 10000) continue;
 		if (!tokens_pending[token]) tokens_pending[token] = [];
 		tokens_pending[token].push(pkey);
 	}
@@ -240,7 +240,7 @@ function search(opt, callback) {
 function searchEntry(opt, callback) {
 	var query = opt.query;
 	var page = opt.page;
-	console.log([query, page]);
+	console.log([query, page].toString());
 	var rv = {query:query, page:page, more:false, full:false, results:[]};
 	var offset = (page - 1) * limit;
 	var q = (query + '').replace(/[\x00-\x1f\x7f-\xa0]/g,'').toLowerCase();
@@ -276,31 +276,20 @@ function searchFull(opt, callback) {
 	var id_offset = opt.id_offset || 0;
 	var rv = {query:query, page:page, more:false, full:true, results:[]};
 	var tokens = tokenize(query.toLowerCase());
-	console.log([query, tokens, page, id_offset].toString());
 	tokens = tokens
-		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 20000)}) // opposite of "don't-index-condition"
+		.filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 10000)}) // opposite of "don't-index-condition"
 		.sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
 	if (!tokens.length) callback(rv);
-	var c0 = common_tokens[tokens[0]] || 0;
-	var c1 = common_tokens[tokens[1]] || 0;
-	two_idx = (tokens.length >= 2 && c0 > 400 && c0 + c1 < 12000);
-	console.log([two_idx, tokens, tokens.map(function(c) {return common_tokens[c]||0})].toString());
+	console.log([query, page, id_offset, tokens[0], common_tokens[tokens[0]]||0].toString());
 
 	var t = Date.now();
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				two_idx ?
-					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
-						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-						'AND raw LIKE ? ESCAPE ? LIMIT ? ;' :
-					'SELECT id, raw FROM eijiro WHERE id > ? ' + 
-						'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-						'AND raw LIKE ? ESCAPE ? LIMIT ? ;' ,
-				two_idx ?
-					[id_offset, tokens[0], tokens[1], '%'+likeEscape(query)+'%', '@',limit] :
-					[id_offset, tokens[0], '%'+likeEscape(query)+'%', '@',limit],
+				'SELECT id, raw FROM eijiro WHERE id > ? ' + 
+					'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
+					'AND entry LIKE ? ESCAPE ? LIMIT ? ;' ,
+				[id_offset, tokens[0], '%'+likeEscape(query)+'%', '@',limit],
 				function sqlSuccess(tx, res) {
 					var q = query.toLowerCase();
 					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
