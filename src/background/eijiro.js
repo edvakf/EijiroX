@@ -218,7 +218,7 @@ function storeFile(type, file, callback) {
 }
 
 // search
-var limit = 30; // how many results to show in one page
+var limit = 15; // how many results to show in one page
 var optlist = ['query', 'page', 'full', 'id_offset'];
 
 function search(opt, callback) {
