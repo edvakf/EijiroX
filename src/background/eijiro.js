@@ -286,15 +286,17 @@ function searchFull(opt, callback) {
 	db.transaction(
 		function transaction(tx) {
 			tx.executeSql(
-				'SELECT id, raw FROM eijiro WHERE id > ? ' + 
+				'SELECT * FROM eijiro WHERE id > ? ' + 
 					'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
 					'AND entry LIKE ? ESCAPE ? LIMIT ? ;' ,
 				[id_offset, tokens[0], '%'+likeEscape(query)+'%', '@',limit],
 				function sqlSuccess(tx, res) {
-					var q = query.toLowerCase();
+					var qtokens = '|' + tokenize(query).join('|') + '|';
 					for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
 						var item = rows.item(i);
-						rv.results.push(item.raw);
+						if (('|' + tokenize(item.entry).join('|') + '|').indexOf(qtokens) >= 0) { // to solve the issue: "the more" hits "breathe more"
+							rv.results.push(item.raw);
+						}
 						id_offset = item.id;
 					}
 					if (l === limit) rv.more = true;
