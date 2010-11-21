@@ -97,6 +97,10 @@ h1 {
 	font-family: Helvetica, Arial, sans-serif;
 }
 
+#results .query-highlight {
+	color: orangered;
+}
+
 #loading {
 	text-align: center;
 	width: 100%;
