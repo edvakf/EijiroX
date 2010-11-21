@@ -431,7 +431,7 @@ function DelayHashChange (hashchange, wait) {
 	window.addEventListener('hashchange', _hashchange, false);
 	function setHash() {
 		window.removeEventListener('hashchange', _hashchange, false);
-		if (reallySetHash) location.hash = currentId;
+		if (reallySetHash) try{location.hash = currentId;} catch(e) {} // if opened in Opera Extension's popup location is a protected variable
 		window.addEventListener('hashchange', _hashchange, false);
 	}
 	return doAction;

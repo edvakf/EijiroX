@@ -1,1 +1,6 @@
-src.zip
+oex/*
+*.oex
+ua/*
+*.ua
+crx/*
+*.crx

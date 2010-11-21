@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" id="http://atsushi-takayama.com/eijirox/" version="1.0.0">
+  <name>EijiroX</name>
+  <description>Local Eijiro search engine (dictionary not included)</description>
+  <author href="http://d.hatena.ne.jp/edvakf/">edvakf</author>
+  <icon width="64" height="64" src="public_html/icons/icon64.png"/>
+  <icon width="48" height="48" src="public_html/icons/icon48.png"/>
+  <icon width="32" height="32" src="public_html/icons/icon32.png"/>
+  <icon width="24" height="24" src="public_html/icons/icon24.png"/>
+  <icon width="18" height="18" src="public_html/icons/icon18.png"/>
+  <icon width="16" height="16" src="public_html/icons/icon16.png"/>
+</widget>
