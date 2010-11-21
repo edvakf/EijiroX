@@ -17,6 +17,7 @@ if (window.opera) {
 				res.setResponseHeader('Content-Type', 'text/html');
 				res.write('<!DOCTYPE html><meta charset="utf-8"/><title></title><p>Not Found</p>');
 				res.close();
+				return;
 			}
 
 			res.setResponseHeader('Content-Type', 'text/html');
@@ -86,6 +87,7 @@ if (window.opera) {
 				res.setResponseHeader('Content-Type', 'text/html');
 				res.write('<!DOCTYPE html><meta charset="utf-8"/><title></title><p>Not Found</p>');
 				res.close();
+				return;
 			}
 
 			res.setResponseHeader('Content-Type', 'text/plain');
@@ -110,16 +112,35 @@ if (window.opera) {
 
 		opera.extension.onmessage = function(e) {
 			var data = e.data; // data is {action: 'search' / 'store', id: 000000, args: []}
-			opera.postError(JSON.stringify(data));
+			//opera.postError(JSON.stringify(data));
 
 			switch(data.action) {
 				case 'store':
 					e.source.postMessage({action: 'store', id: data.id, ret: {error: true, message: 'upload is not supported yet'}});
 					break;
 				case 'search':
-					search(data.args[0], function(ret) {
-						e.source.postMessage({action: 'search', id: data.id, ret: ret});
-					});
+					var opt = data.args[0];
+					var url = data.args[1];
+					if (url) { // use Opera Unite
+						var xhr = new XMLHttpRequest();
+						xhr.open('GET', url, true);
+						xhr.onload = function() {
+							var res;
+							try{
+								res = JSON.parse(xhr.responseText);
+							} catch(e) {
+								opera.postError(e);
+								res = JSON.parse(JSON.stringify(url));
+								res.results = [];
+							}
+							e.source.postMessage({action: 'search', id: data.id, ret: res});
+						};
+						xhr.send('');
+					} else { // use this Extension
+						search(data.args[0], function(ret) {
+							e.source.postMessage({action: 'search', id: data.id, ret: ret});
+						});
+					}
 					break;
 				case 'get_selection':
 					var tab = opera.extension.tabs.getFocused();
@@ -127,7 +148,6 @@ if (window.opera) {
 					listening = e.source;
 					break;
 				case 'selection?':
-					opera.postError(button.popup.window);
 					if (listening) listening.postMessage({action: 'get_selection', ret: data.args[0]});
 					break;
 			}

@@ -8,7 +8,7 @@ cp -r src/* crx/
 rm crx/config.xml
 rm -r crx/includes/
 cd crx
-zip -r ../eijirox.zip *
+zip -r ../eijirox.crx *
 cd ..
 
 
