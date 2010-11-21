@@ -396,7 +396,7 @@ function parseQuery(query) {
 	var ret = {};
 	query.split('&').forEach(function(kv) {
 		kv = kv.split('=');
-		ret[kv[0]] = decodeURI(kv[1]);
+		ret[kv[0]] = decodeURIComponent(kv[1]);
 	});
 	return ret;
 }
