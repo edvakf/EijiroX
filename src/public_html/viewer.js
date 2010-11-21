@@ -188,7 +188,7 @@ function highlightQuery(query, html) {
 			}
 			return ret;
 		}
-	}).join('\n');
+	}).join('');
 }
 
 var re_kanji = '(?:[々〇〻\u3400-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF])+'; // http://tama-san.com/?p=196
