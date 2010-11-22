@@ -1,6 +1,6 @@
 if (window.opera) {
 	db.transaction(function(tx) {
-		tx.executeSql('CREATE TABLE IF NOT EXISTS dummy (id INTEGER);'); // this creates a database file which I can look for and replace with Chrome's
+		tx.executeSql('CREATE TABLE IF NOT EXISTS invindex (token TEXT, id INTEGER);'); // this creates a database file which I can look for and replace with Chrome's
 	});
 
 
