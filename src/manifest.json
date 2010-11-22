@@ -1,7 +1,7 @@
 {
   "name": "EijiroX",
   "description": "Local Eijiro search engine (dictionary not included)",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "icons": {
     "24": "public_html/icons/icon24.png",
     "32": "public_html/icons/icon32.png",
