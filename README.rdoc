@@ -1,56 +1,27 @@
 = EijiroX
 
-Local Eijiro search engine.
+英辞郎の辞書ファイルをブラウザから検索するための拡張機能。
 
-Eijiro is the best English-Japanese dictionary with a million records and counting.
-
-Note: Dictionary is not included (you must buy your own copy of Eijiro)
-
+注・辞書ファイルは同梱されません。各自で購入してください。
 http://www.eijiro.jp/
 
 == How To Use
 
-On Chrome, install src/ directory as an unpacked extension, then open option page of the extension.
+ビデオ解説（音声なし） http://www.youtube.com/watch?v=qqif7wX799g
 
-On Opera, install src/config.xml as Opera Unite, then double click the EijiroX icon on Unite App Manager.
+Google Chrome の場合は、アドレスバー付近に EijiroX のアイコンが出るのでそれをクリックするか、拡張機能管理ページで Options をクリックします。
 
-At the first use, you must convert dictionary files to the database. 
-You need EIJI-***.TXT, WAEI-***.TXT, REIJI***.TXT and RYAKU***.TXT from eijiro.
-You can store without all 4 files, but you must have at least one of them (of course).
-Click the triangle on the top right corner of the page and choose files, then click "store".
-It takes more than 30 minutes, and it's quite heavy, so make sure you have nothing important to do on your computer.
+初回起動時だけ右上の▽マークをクリックして辞書の登録をしてください。
+英辞郎ファイル（PDIC 形式ではないほう）の EIJI-***.TXT, WAEI-***.TXT, REIJI***.TXT と RYAKU***.TXT
+のうち、少なくとも一つ選択してから store ボタンを押してください。
+手間は一度だけなので4つとも変換してしまったほうがいいでしょう。
 
+辞書をデータベースに変換するのに時間がかかることがあります。作者の手元では30分ほどかかりました。
+その間はハードディスクを酷使するので、パソコンが重くなる可能性があります。
+辞書変換後は、変換に利用したファイルは移動させてもかまいません。
+データベースファイルは1GB前後になります。
 
-Currently, Opera does not allow creating over 10MB of database.
-Therefore, you MUST create the database on Chrome and copy the database to Opera's folder.
-On Windows, Chrome's database is located in
-
- C:\Users\{{USERNAME}}\AppData\Local\Google\Chrome\User Data\Default\databases\chrome-extension_********\
-
-whereas on Mac OS X, it's in
-
- $HOME/Library/Application Support/Google/Chrome/Default/databases/chrome-extension_********/
-
-The filename is a number like "4". 
-
-
-Now, please make sure to make a database on Opera first, by the same way as Chrome.
-This will create a database file in the Opera Unite folder.
-
- C:\Users\{{USERNAME}}\AppData\Local\Opera\Opera\widgets\wuid-********\
-
-on Windows, or
-
- $HOME/Library/Application\ Support/Opera 11/widgets/wuid-********/
-
-on Mac. 
-You must go down a folder or two from there to reach the actual database file, but it should be easy to find.
-
-Copy the database file from Chrome's folder, and paste it inside Opera Unite App's folder, 
-with the name that you find in Opera Unite App's folder (something like "00000000").
-
-If you don't know which wuid is asigned to EijiroX (you probably don't), look at widgets.dat located in the "widgets" folder.
-so open widgets.adr and check EijiroX there.
+Opera の場合は別途記述します。
 
 == Author
 
