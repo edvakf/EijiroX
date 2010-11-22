@@ -9,6 +9,8 @@ http://www.eijiro.jp/
 
 ビデオ解説（音声なし） http://www.youtube.com/watch?v=qqif7wX799g
 
+詳しい解説 http://d.hatena.ne.jp/edvakf/20101122/1290423802
+
 Google Chrome の場合は、アドレスバー付近に EijiroX のアイコンが出るのでそれをクリックするか、拡張機能管理ページで Options をクリックします。
 
 初回起動時だけ右上の▽マークをクリックして辞書の登録をしてください。
