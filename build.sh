@@ -5,20 +5,24 @@ cd `dirname $0`
 if [ "$1" == "nozip" ]; then ZIP=""; else ZIP="yes"; fi
 
 # chrome
-mkdir -p crx
-cp -r src/* crx/
+echo "*** Creating .crx"
+rm -r crx
+cp -r src crx
 #rsync -a --delete src crx
 cd crx
 rm oex.xml unite.xml widget.xml options.html
+rm -r includes widget
 if [ $ZIP ]; then
   zip -r ../eijirox.crx *
 fi
 cd ..
+cp eijirox.crx eijirox.zip
 
 
 # opera unite
-mkdir -p unite
-cp -r src/* unite/
+echo "*** Creating .ua"
+rm -r unite
+cp -r src unite
 #rsync -a --delete src unite
 cd unite
 mv unite.xml config.xml
@@ -31,8 +35,9 @@ cd ..
 
 
 # opera extension
-mkdir -p oex
-cp -r src/* oex/
+echo "*** Creating .oex"
+rm -r oex
+cp -r src oex
 #rsync -a --delete src oex
 cd oex
 mv oex.xml config.xml
@@ -45,8 +50,9 @@ cd ..
 
 
 # opera widget
-mkdir -p widget
-cp -r src/* widget/
+echo "*** Creating .wgt"
+rm -r widget
+cp -r src widget
 #rsync -a --delete src widget
 cd widget
 mv widget.xml config.xml

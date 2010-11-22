@@ -1,0 +1,3 @@
+AddType application/x-opera-uniteapplication .ua
+AddType application/x-opera-widgets .wgt
+AddType application/x-opera-extension .oex

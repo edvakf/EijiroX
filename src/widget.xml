@@ -17,10 +17,10 @@
     <revised>2010-11</revised>
   </id>
 
-  <icon width="64" height="64">icons/icon64.png</icon>
-  <icon width="48" height="48">icons/icon48.png</icon>
-  <icon width="32" height="32">icons/icon32.png</icon>
-  <icon width="24" height="24">icons/icon24.png</icon>
-  <icon width="18" height="18">icons/icon18.png</icon>
-  <icon width="16" height="16">icons/icon16.png</icon>
+  <icon width="64" height="64">public_html/icons/icon64.png</icon>
+  <icon width="48" height="48">public_html/icons/icon48.png</icon>
+  <icon width="32" height="32">public_html/icons/icon32.png</icon>
+  <icon width="24" height="24">public_html/icons/icon24.png</icon>
+  <icon width="18" height="18">public_html/icons/icon18.png</icon>
+  <icon width="16" height="16">public_html/icons/icon16.png</icon>
 </widget>
