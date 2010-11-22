@@ -1,6 +1,9 @@
 if (window.opera) {
 
 	if (opera.extension) {
+	/*
+	 * Extension
+	 */
 
 		var search_callbacks = {};
 		var unite_url = widget.preferences.getItem('unite_url');
@@ -50,7 +53,39 @@ if (window.opera) {
 			$('config').appendChild(button);
 		}, false);
 
+
+	} else if (this.widget) {
+	/*
+	 * Widget
+	 */
+
+		var search_callbacks = {};
+
+		searchRequest = function searchRequest(opt, callback) {
+			var reqid = Math.floor((Date.now() + Math.random()) * 1000);
+			window.parent.postMessage({
+				action: 'search',
+				id: reqid,
+				args: [opt]
+			}, '*');
+			search_callbacks[reqid] = callback;
+		}
+
+		window.onmessage = function(e) {
+			var data = e.data;
+			console.log(JSON.stringify(data));
+			if (data.action === 'search') {
+				if (search_callbacks[data.id]) {
+					search_callbacks[data.id](data.ret);
+					delete search_callbacks[data.id];
+				}
+			}
+		};
+
 	} else {
+	/*
+	 * Unite
+	 */
 
 		searchRequest = function searchRequest(opt, callback) {
 			var xhr = new XMLHttpRequest;

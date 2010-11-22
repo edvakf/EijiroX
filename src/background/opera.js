@@ -5,6 +5,9 @@ if (window.opera) {
 
 
 	if (opera.io && opera.io.webserver) {
+	/*
+	 * Unite
+	 */
 
 		storeHandler = function storeHandler(e) {
 			var conn = e.connection;
@@ -107,6 +110,9 @@ if (window.opera) {
 		opera.io.webserver.addEventListener('search', searchHandler, false);
 
 	} else if (opera.extension) {
+	/*
+	 * Extension
+	 */
 
 		var listening;
 
@@ -137,7 +143,7 @@ if (window.opera) {
 						};
 						xhr.send('');
 					} else { // use this Extension
-						search(data.args[0], function(ret) {
+						search(opt, function(ret) {
 							e.source.postMessage({action: 'search', id: data.id, ret: ret});
 						});
 					}
@@ -165,5 +171,26 @@ if (window.opera) {
 		});
 		opera.contexts.toolbar.addItem(button);
 
+	} else if (this.widget) {
+	/*
+	 * Widget
+	 */
+
+		this.onmessage = function(e) {
+			var data = e.data; // data is {action: 'search' / 'store', id: 000000, args: []}
+			//console.log(JSON.stringify(data));
+
+			switch(data.action) {
+				case 'store':
+					e.source.postMessage({action: 'store', id: data.id, ret: {error: true, message: 'upload is not supported yet'}}, '*');
+					break;
+				case 'search':
+					var opt = data.args[0];
+					search(opt, function(ret) {
+						e.source.postMessage({action: 'search', id: data.id, ret: ret}, '*');
+					});
+					break;
+			}
+		};
 	}
 }

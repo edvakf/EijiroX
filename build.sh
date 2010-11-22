@@ -10,7 +10,7 @@ cp -r src/* crx/
 #rsync -a --delete src crx
 rm -r crx/includes/
 cd crx
-rm oex.xml unite.xml
+rm oex.xml unite.xml widget.xml options.html
 if [ $ZIP ]; then
   zip -r ../eijirox.crx *
 fi
@@ -22,9 +22,8 @@ mkdir -p unite
 cp -r src/* unite/
 #rsync -a --delete src unite
 cd unite
-cp unite.xml config.xml
-rm oex.xml
-rm manifest.json
+mv unite.xml config.xml
+rm oex.xml widget.xml options.html manifest.json
 rm -r includes/
 if [ $ZIP ]; then
   zip -r ../eijirox.ua *
@@ -37,11 +36,25 @@ mkdir -p oex
 cp -r src/* oex/
 #rsync -a --delete src oex
 cd oex
-cp oex.xml config.xml
-rm unite.xml
-rm manifest.json
+mv oex.xml config.xml
+rm unite.xml widget.xml manifest.json
 if [ $ZIP ]; then
   zip -r ../eijirox.oex *
+fi
+cd ..
+
+
+# opera widget
+mkdir -p widget
+cp -r src/* widget/
+#rsync -a --delete src widget
+cd widget
+mv widget.xml config.xml
+rm unite.xml oex.xml options.html manifest.json
+mv widget/* .
+rm -r widget
+if [ $ZIP ]; then
+  zip -r ../eijirox.wgt *
 fi
 cd ..
 
