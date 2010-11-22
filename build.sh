@@ -8,7 +8,6 @@ if [ "$1" == "nozip" ]; then ZIP=""; else ZIP="yes"; fi
 mkdir -p crx
 cp -r src/* crx/
 #rsync -a --delete src crx
-rm -r crx/includes/
 cd crx
 rm oex.xml unite.xml widget.xml options.html
 if [ $ZIP ]; then
@@ -24,7 +23,7 @@ cp -r src/* unite/
 cd unite
 mv unite.xml config.xml
 rm oex.xml widget.xml options.html manifest.json
-rm -r includes/
+rm -r includes widget
 if [ $ZIP ]; then
   zip -r ../eijirox.ua *
 fi
@@ -38,6 +37,7 @@ cp -r src/* oex/
 cd oex
 mv oex.xml config.xml
 rm unite.xml widget.xml manifest.json
+rm -r widget
 if [ $ZIP ]; then
   zip -r ../eijirox.oex *
 fi
@@ -52,7 +52,7 @@ cd widget
 mv widget.xml config.xml
 rm unite.xml oex.xml options.html manifest.json
 mv widget/* .
-rm -r widget
+rm -r includes widget
 if [ $ZIP ]; then
   zip -r ../eijirox.wgt *
 fi
