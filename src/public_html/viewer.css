@@ -22,6 +22,10 @@ h1 {
 	float: right;
 }
 
+#config {
+	font-size: small;
+}
+
 #inputbox {
 	width: 100%;
 	text-align: center

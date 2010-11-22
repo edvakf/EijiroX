@@ -160,7 +160,7 @@ if (window.opera) {
 			popup: {
 				href: 'public_html/index.html',
 				width: 350,
-				height: 400,
+				height: 350,
 			}
 		});
 		opera.contexts.toolbar.addItem(button);
