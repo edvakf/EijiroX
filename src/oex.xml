@@ -10,5 +10,5 @@
   <icon width="18" height="18" src="public_html/icons/icon18.png"/>
   <icon width="16" height="16" src="public_html/icons/icon16.png"/>
   <preference name="unite_url" value="" />
-  <access origin="*" subdomains="true"/>
+  <access origin="http://operaunite.com" subdomains="true"/>
 </widget>
