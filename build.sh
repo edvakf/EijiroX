@@ -11,7 +11,7 @@ cp -r src crx
 #rsync -a --delete src crx
 cd crx
 rm oex.xml unite.xml widget.xml options.html
-rm -r includes widget
+rm -r includes
 if [ $ZIP ]; then
   zip -r ../eijirox.crx *
 fi
@@ -27,7 +27,7 @@ cp -r src unite
 cd unite
 mv unite.xml config.xml
 rm oex.xml widget.xml options.html manifest.json
-rm -r includes widget
+rm -r includes
 if [ $ZIP ]; then
   zip -r ../eijirox.ua *
 fi
@@ -42,7 +42,6 @@ cp -r src oex
 cd oex
 mv oex.xml config.xml
 rm unite.xml widget.xml manifest.json
-rm -r widget
 if [ $ZIP ]; then
   zip -r ../eijirox.oex *
 fi
@@ -57,8 +56,7 @@ cp -r src widget
 cd widget
 mv widget.xml config.xml
 rm unite.xml oex.xml options.html manifest.json
-mv widget/* .
-rm -r includes widget
+rm -r includes
 if [ $ZIP ]; then
   zip -r ../eijirox.wgt *
 fi
