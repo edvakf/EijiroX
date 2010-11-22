@@ -2,33 +2,46 @@
 
 cd `dirname $0`
 
+if [ "$1" == "nozip" ]; then ZIP=""; else ZIP="yes"; fi
+
 # chrome
 mkdir -p crx
 cp -r src/* crx/
-rm crx/config.xml
+#rsync -a --delete src crx
 rm -r crx/includes/
 cd crx
-zip -r ../eijirox.crx *
+rm oex.xml unite.xml
+if [ $ZIP ]; then
+  zip -r ../eijirox.crx *
+fi
 cd ..
 
 
 # opera unite
 mkdir -p unite
 cp -r src/* unite/
-rm unite/manifest.json
-rm -r unite/includes/
-cp unite.xml unite/config.xml
+#rsync -a --delete src unite
 cd unite
-zip -r ../eijirox.ua *
+cp unite.xml config.xml
+rm oex.xml
+rm manifest.json
+rm -r includes/
+if [ $ZIP ]; then
+  zip -r ../eijirox.ua *
+fi
 cd ..
 
 
 # opera extension
 mkdir -p oex
 cp -r src/* oex/
-rm oex/manifest.json
-cp oex.xml oex/config.xml
+#rsync -a --delete src oex
 cd oex
-zip -r ../eijirox.oex *
+cp oex.xml config.xml
+rm unite.xml
+rm manifest.json
+if [ $ZIP ]; then
+  zip -r ../eijirox.oex *
+fi
 cd ..
 
