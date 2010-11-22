@@ -32,6 +32,7 @@ function newsearch(opt) {
 	setHashDelay.cancel();
 
 	searchDelay(function() {
+	document.title = 'EijiroX: ' + opt.query + (opt.full ? ' (全文)' : '');
 		searchRequest(opt, searchFinished);
 		$('loading').className = ''; // show loading icon
 	});
