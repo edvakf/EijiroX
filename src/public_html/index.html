@@ -6,6 +6,8 @@
 		<script>
 			// Workaround for Opera's bug DSK-318976 (When opened a custom search engine with a hash part, location.hash is empty)
 			if (location.href.indexOf('#') >= 0 && !location.hash) location.href = location.href;
+			// Workaround for Chrome's bug (when opened in popup, right margin doesn't take scrollbar into account?)
+			if (location.hash === '#chrome-popup') {document.documentElement.className = 'chrome-popup'; location.hash = '';}
 		</script>
 		<link rel="stylesheet" href="viewer.css"/>
 		<link rel="icon" href="icons/favicon.ico"/>

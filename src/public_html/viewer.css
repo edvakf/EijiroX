@@ -2,6 +2,9 @@ body {
 	overflow-y: scroll;
 	min-height: 300px;
 	min-width: 300px;
+}
+
+html.chrome-popup > body {
 	margin-right: 30px;
 }
 
