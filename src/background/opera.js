@@ -11,7 +11,6 @@ if (window.opera) {
 
 		storeHandler = function storeHandler(e) {
 			var conn = e.connection;
-
 			var req = conn.request;
 			var res = conn.response;
 
@@ -106,8 +105,32 @@ if (window.opera) {
 			});
 		};
 
+		suggestHandler = function suggestHandler(e) {
+			var conn = e.connection;
+			var req = conn.request;
+			var res = conn.response;
+
+			if (!conn.isLocal) {
+				res.setStatusCode(404);
+				res.setResponseHeader('Content-Type', 'text/html');
+				res.write('<!DOCTYPE html><meta charset="utf-8"/><title></title><p>Not Found</p>');
+				res.close();
+				return;
+			}
+
+			res.setResponseHeader('Content-Type', 'text/plain');
+
+			query = req.queryItems.query ? decodeURIComponent(req.queryItems.query[0]) : '';
+			suggest(query, function(ret) {
+				res.write(JSON.stringify(ret));
+				res.close();
+			});
+
+		}
+
 		opera.io.webserver.addEventListener('store', storeHandler, false);
 		opera.io.webserver.addEventListener('search', searchHandler, false);
+		opera.io.webserver.addEventListener('suggest', suggestHandler, false);
 
 	} else if (opera.extension) {
 	/*

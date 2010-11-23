@@ -253,7 +253,7 @@ function searchEntry(opt, callback) {
 				'LIMIT ? OFFSET ?;', 
 				[q, nextWord(q), limit, offset],
 				function sqlSuccess(tx, res) {
-					for (var i = 0, l = res.rows.length; i < res.rows.length; i++) {
+					for (var i = 0, l = res.rows.length; i < l; i++) {
 						rv.results.push(res.rows.item(i).raw);
 					}
 					if (i === limit) rv.more = true;
@@ -303,6 +303,37 @@ function searchFull(opt, callback) {
 					rv.id_offset = id_offset;
 					console.log('took ' + (Date.now() - t) + ' ms');
 					callback(rv);
+				},
+				function sqlError(tx, err) {
+					if (callback) callback(rv);
+					console.log(err);
+				}
+			);
+		}
+	)
+}
+
+function suggest(query, callback) {
+	console.log('*' + query);
+	var rv = [query, []];
+	var q = (query + '').replace(/[\x00-\x1f\x7f-\xa0]/g,'').toLowerCase();
+	var re_line = /■(.*?)(?:  ?{.*?})? : (.*)/;
+	var re_ruby = /｛.*?｝/g;
+	var t = Date.now();
+	db.transaction(
+		function transaction(tx) {
+			tx.executeSql(
+				'SELECT raw FROM eijiro ' +
+				'WHERE entry >= ? AND entry < ? ' + 
+				'LIMIT 10; ',
+				[q, nextWord(q)],
+				function sqlSuccess(tx, res) {
+					for (var i = 0, l = res.rows.length; i < l; i++) {
+						var m = res.rows.item(i).raw.match(re_line);
+						if (m) rv[1].push(m[1] + ' : ' + m[2].replace(re_ruby, ''));
+					}
+					console.log('took ' + (Date.now() - t) + ' ms');
+					if (callback) callback(rv);
 				},
 				function sqlError(tx, err) {
 					if (callback) callback(rv);
