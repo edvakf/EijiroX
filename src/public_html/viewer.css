@@ -100,10 +100,20 @@ h1 {
 	list-style-type:square;
 }
 
-#results .phonetic {
-	font-family: Helvetica, Arial, sans-serif;
+@font-face{
+	font-family:CharisSIL;
+	font-style: normal;
+	src:url("fonts/CharisSILR.ttf");
 }
-
+@font-face{
+	font-family:CharisSIL;
+	font-style: italic;
+	src:url("fonts/CharisSILI.ttf");
+}
+#results .phonetic {
+	font-family: CharisSIL, Helvetica, Arial, sans-serif;
+	font-size: 110%;
+}
 #results .query-highlight {
 	color: orangered;
 }

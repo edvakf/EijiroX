@@ -23,7 +23,7 @@ Google Chrome の場合は、アドレスバー付近に EijiroX のアイコン
 辞書変換後は、変換に利用したファイルは移動させてもかまいません。
 データベースファイルは1GB前後になります。
 
-Opera の場合は別途記述します。
+Opera の場合は上記のサイトの解説を見てください。
 
 == Author
 
@@ -36,3 +36,6 @@ The MIT License
 Copyright (c) 2009 Atsushi TAKAYAMA
 
 EijiroX makes use of TinySegmenter (c) 2008 Taku Kudo http://www.chasen.org/~taku/software/TinySegmenter/
+
+EijiroX includes Charis SIL font. Please see src/public_html/fonts/OFL.txt
+http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=CharisSILFont
