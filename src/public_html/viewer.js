@@ -41,7 +41,7 @@ function newsearch(opt) {
 var setHashDelay = DelayHashChange(hashchange, 3000);
 
 function hashchange() {
-	var hash = location.hash.replace(/^#/, '');console.log(hash);
+	var hash = location.hash.replace(/^#/, '');
 	if (hash === query_string) return;
 	var opt = parseQuery(hash);
 	opt.page = 1;
@@ -384,10 +384,13 @@ function sw() {
 	// autofocus on Chrome is very weird, so implement by myself
 	$('query').focus();
 
-	console.log(location.hash);
+	//console.log(location.hash);
 	var opt = parseQuery(location.hash.replace(/^#/, ''));
-	if ($('query').value !== opt.query && opt.query) $('query').value = opt.query;
-	newsearch(opt);
+	var q = opt.query;
+	if (!q) return;
+	opt.query = q.split('+').join(' ');
+	if (!opt.page) opt.page = 1;
+	location.hash = serializeToQuery(opt);
 }());
 
 
