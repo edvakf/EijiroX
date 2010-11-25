@@ -30,6 +30,7 @@ function store(files, callback) {
 			if (filename) {
 				console.log((new Date).toISOString() + ' : ' + filename + ' finished');
 				callback({progress: true, message: eijiros[filename] + ' : 保存完了。'});
+				delete files[filename];
 			}
 		}
 		filename = filenames.shift();
