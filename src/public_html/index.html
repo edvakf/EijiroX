@@ -1,50 +1,50 @@
 <!DOCTYPE html>
 <html lang="ja">
-	<head>
-		<meta charset="utf-8" />
-		<title>EijiroX</title>
-		<script>
-			// Workaround for Opera's bug DSK-318976 (When opened a custom search engine with a hash part, location.hash is empty)
-			if (location.href.indexOf('#') >= 0 && !location.hash) location.href = location.href;
-			// Workaround for Chrome's bug (when opened in popup, right margin doesn't take scrollbar into account?)
-			if (location.hash === '#chrome-popup') {document.documentElement.className = 'chrome-popup'; location.hash = '';}
-		</script>
-		<link rel="stylesheet" href="viewer.css"/>
-		<link rel="icon" href="icons/favicon.ico"/>
-	</head>
-	<body>
-		<a id="switch" href="javascript:void 0">▽</a>
-		<h1>EijiroX</h1>
-		<div id="config" class="hidden">
-			<form method="post" action="store" id="dictionaries" enctype="multipart/form-data">
-				<h2>データベースの作成</h2>
-				<p>30分以上かかることがあります。その間はこのページを閉じないでください。変換が終われば元のファイルは移動しても構いません。</p>
-				<ul>
-					<li><label for="eiji">英辞郎 (EIJI-***.TXT)</label> <input type="file" id="eiji" name="eiji"/></li>
-					<li><label for="waei">和英辞郎 (WAEI-***.TXT)</label> <input type="file" id="waei" name="waei"/></li>
-					<li><label for="reiji">例辞郎 (REIJI***.TXT)</label> <input type="file" id="reiji" name="reiji"/></li>
-					<li><label for="ryaku">略語郎 (RYAKU***.TXT)</label> <input type="file" id="ryaku" name="ryaku"/></li>
-				</ul>
-				<input type="submit" id="store" name="store" value="Store"/>
-			</form>
-			<h2>検索結果の表示設定</h2>
-			<ul>
-				<li><label for="noruby">ルビを表示しない</label> <input type="checkbox" id="noruby" name="noruby"/></li>
-				<li><label for="largefont">小さいフォントを使わない（普通サイズで表示）</label> <input type="checkbox" id="largefont" name="largefont"/></li>
-			</ul>
-		</div>
-		<div id="main">
-			<div id="inputbox">
-				<input id="query"/><input type="button" id="fulltext" value="Full Text"/>
-			</div>
-			<div id="results">
-				<dl id="res-list"></dl>
-				<div id="loading" class="hidden"><img src="ajax-loader.gif"></div>
-				<button id="selection-search" class="hidden">Search</button>
-			</div>
-		</div>
-		<script src="viewer.js"></script>
-		<script src="chrome.js"></script>
-		<script src="opera.js"></script>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>EijiroX</title>
+    <script>
+      // Workaround for Opera's bug DSK-318976 (When opened a custom search engine with a hash part, location.hash is empty)
+      if (location.href.indexOf('#') >= 0 && !location.hash) location.href = location.href;
+      // Workaround for Chrome's bug (when opened in popup, right margin doesn't take scrollbar into account?)
+      if (location.hash === '#chrome-popup') {document.documentElement.className = 'chrome-popup'; location.hash = '';}
+    </script>
+    <link rel="stylesheet" href="viewer.css"/>
+    <link rel="icon" href="icons/favicon.ico"/>
+  </head>
+  <body>
+    <a id="switch" href="javascript:void 0">▽</a>
+    <h1>EijiroX</h1>
+    <div id="config" class="hidden">
+      <form method="post" action="store" id="dictionaries" enctype="multipart/form-data">
+        <h2>データベースの作成</h2>
+        <p>30分以上かかることがあります。その間はこのページを閉じないでください。変換が終われば元のファイルは移動しても構いません。</p>
+        <ul>
+          <li><label for="eiji">英辞郎 (EIJI-***.TXT)</label> <input type="file" id="eiji" name="eiji"/></li>
+          <li><label for="waei">和英辞郎 (WAEI-***.TXT)</label> <input type="file" id="waei" name="waei"/></li>
+          <li><label for="reiji">例辞郎 (REIJI***.TXT)</label> <input type="file" id="reiji" name="reiji"/></li>
+          <li><label for="ryaku">略語郎 (RYAKU***.TXT)</label> <input type="file" id="ryaku" name="ryaku"/></li>
+        </ul>
+        <input type="submit" id="store" name="store" value="Store"/>
+      </form>
+      <h2>検索結果の表示設定</h2>
+      <ul>
+        <li><label for="noruby">ルビを表示しない</label> <input type="checkbox" id="noruby" name="noruby"/></li>
+        <li><label for="largefont">小さいフォントを使わない（普通サイズで表示）</label> <input type="checkbox" id="largefont" name="largefont"/></li>
+      </ul>
+    </div>
+    <div id="main">
+      <div id="inputbox">
+        <input id="query"/><input type="button" id="fulltext" value="Full Text"/>
+      </div>
+      <div id="results">
+        <dl id="res-list"></dl>
+        <div id="loading" class="hidden"><img src="ajax-loader.gif"></div>
+        <button id="selection-search" class="hidden">Search</button>
+      </div>
+    </div>
+    <script src="viewer.js"></script>
+    <script src="chrome.js"></script>
+    <script src="opera.js"></script>
+  </body>
 </html>

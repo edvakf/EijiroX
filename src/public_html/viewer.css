@@ -1,135 +1,135 @@
 body {
-	overflow-y: scroll;
-	min-height: 300px;
-	min-width: 300px;
+  overflow-y: scroll;
+  min-height: 300px;
+  min-width: 300px;
 }
 
 html.chrome-popup > body {
-	margin-right: 30px;
+  margin-right: 30px;
 }
 
 .hidden {
-	display:none;
+  display:none;
 }
 
 h1 {
-	display: block;
-	text-align: center;
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
-	font-size: x-large;
+  display: block;
+  text-align: center;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: x-large;
 }
 
 #switch {
-	display: block;
-	float: right;
+  display: block;
+  float: right;
 }
 
 #config {
-	font-size: small;
+  font-size: small;
 }
 
 #inputbox {
-	width: 100%;
-	text-align: center
+  width: 100%;
+  text-align: center
 }
 
 #query {
-	width: 100%;
-	max-width: 30em;
+  width: 100%;
+  max-width: 30em;
 }
 
 #results {
-	font-size: small;
-	margin-left: auto;
-	margin-right:auto;
-	max-width: 50em;
+  font-size: small;
+  margin-left: auto;
+  margin-right:auto;
+  max-width: 50em;
 }
 
 #results.largefont {
-	font-size: medium;
+  font-size: medium;
 }
 
 #results.noruby rp, #results.noruby rt, #results.noruby .ruby{
-	display:none;
+  display:none;
 }
 
 #results a.searchlink, #results a.searchlink {
-	color: blue;
+  color: blue;
 }
 
 #results a.implicit.searchlink {
-	color: black;
-	text-decoration: none;
+  color: black;
+  text-decoration: none;
 }
 
 #results a.implicit.searchlink:hover {
-	color: blue;
-	text-decoration: underline;
+  color: blue;
+  text-decoration: underline;
 }
 
 #results .entry-box {
-	margin-left: 1em;
+  margin-left: 1em;
 }
 
 #results .entry {
-	font-weight: bold;
+  font-weight: bold;
 }
 #results .kind {
-	margin-left:0.5em;
+  margin-left:0.5em;
 }
 
 #results .kind, #results .info {
-	background-color:#f8f8f8;
-	font-size:80%;
-	padding:0.1em;
-	border:solid #ccc 1px;
+  background-color:#f8f8f8;
+  font-size:80%;
+  padding:0.1em;
+  border:solid #ccc 1px;
 }
 
 #results dd, dt {
-	padding-top: 0.1em;
-	padding-bottom: 0.1em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
 }
 
 #results .bracket, #results .entry-box .separator {
-	display: none;
+  display: none;
 }
 
 #results .translation {
-	display:list-item;
-	list-style-type:square;
+  display:list-item;
+  list-style-type:square;
 }
 
 @font-face{
-	font-family:CharisSIL;
-	font-style: normal;
-	src:url("fonts/CharisSILR.ttf");
+  font-family:CharisSIL;
+  font-style: normal;
+  src:url("fonts/CharisSILR.ttf");
 }
 @font-face{
-	font-family:CharisSIL;
-	font-style: italic;
-	src:url("fonts/CharisSILI.ttf");
+  font-family:CharisSIL;
+  font-style: italic;
+  src:url("fonts/CharisSILI.ttf");
 }
 #results .phonetic {
-	font-family: CharisSIL, Helvetica, Arial, sans-serif;
-	font-size: 110%;
+  font-family: CharisSIL, Helvetica, Arial, sans-serif;
+  font-size: 110%;
 }
 #results .query-highlight {
-	color: orangered;
+  color: orangered;
 }
 
 #loading {
-	text-align: center;
-	width: 100%;
+  text-align: center;
+  width: 100%;
 }
 
 #selection-search {
-	position:absolute;
-	opacity: 0.5;
-	color: rgba(0,0,0,0);
+  position:absolute;
+  opacity: 0.5;
+  color: rgba(0,0,0,0);
 }
 
 #selection-search:hover {
-	opacity: 1;
-	color: black;
+  opacity: 1;
+  color: black;
 }
