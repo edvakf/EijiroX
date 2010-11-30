@@ -13,10 +13,9 @@ cd crx
 rm oex.xml unite.xml widget.xml options.html
 rm -r includes
 if [ $ZIP ]; then
-  zip -r ../eijirox.crx *
+  zip -r ../eijirox.zip *
 fi
 cd ..
-cp eijirox.crx eijirox.zip
 
 
 # opera unite
