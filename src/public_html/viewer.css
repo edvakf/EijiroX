@@ -122,3 +122,14 @@ h1 {
 	text-align: center;
 	width: 100%;
 }
+
+#selection-search {
+	position:absolute;
+	opacity: 0.5;
+	color: rgba(0,0,0,0);
+}
+
+#selection-search:hover {
+	opacity: 1;
+	color: black;
+}

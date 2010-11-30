@@ -105,24 +105,13 @@ function select(e) {
 	var button = $('selection-search');
 	if (sel) {
 		$('query').value = sel;
-		if (!button) {
-			button = document.createElement('button');
-			button.id = 'selection-search';
-			button.textContent = 'search';
-			button.style.position = 'absolute';
-			button.onclick = function() {$('query').focus();};
-			$('query').addEventListener('focus', function() {
-				button.className = 'hidden';
-			}, false);
-			$('results').appendChild(button);
-		}
 		button.className = ''; // show
-		button.style.top = (e.pageY - 40) + 'px';
+		button.style.top = (e.pageY - 10) + 'px';
 		button.style.left = (e.pageX + 5) + 'px';
 	} else {
 		var opt = parseQuery(query_string);
 		if ($('query').value !== opt.query) $('query').value = opt.query;
-		if (button) button.className = 'hidden';
+		button.className = 'hidden';
 	}
 }
 
@@ -411,6 +400,10 @@ function sw() {
 		}
 	}, false);
 }());
+
+// selection-search button
+$('selection-search').onclick = function() {$('query').focus();};
+$('query').addEventListener('focus', function() { $('selection-search').className = 'hidden'; }, false);
 
 // if hash is set already, do search
 (function init() {
