@@ -9,8 +9,9 @@ $('query').addEventListener('keypress', input, false);
 $('query').addEventListener('focus', input, false);
 $('fulltext').addEventListener('click', fullsearch, false);
 window.addEventListener('scroll', scroll, true);
-window.addEventListener('mouseup', select, true);
 window.addEventListener('mousemove', select, true);
+window.addEventListener('mousedown', mouseDown, true);
+window.addEventListener('mouseup', mouseUp, true);
 
 var searchDelay = Debounce(80); // hold 80 ms before searching (when typed in)
 
@@ -87,16 +88,44 @@ function scroll(e) {
 	}
 }
 
+var mouseState = 0; // 0 => up, 1 => down
+function mouseDown(e) {
+	mouseState = 1;
+}
+
+function mouseUp(e) {
+	select(e);
+	mouseState = 0;
+}
+
 function select(e) {
 	if (document.activeElement === $('query')) return;
-	var sel = (document.getSelection() + '').replace(/^\s+|\s+$/g, '');
+	if (mouseState !== 1) return;
+	var sel = (window.getSelection() + '').trim();
+	var button = $('selection-search');
 	if (sel) {
 		$('query').value = sel;
+		if (!button) {
+			button = document.createElement('button');
+			button.id = 'selection-search';
+			button.textContent = 'search';
+			button.style.position = 'absolute';
+			button.onclick = function() {$('query').focus();};
+			$('query').addEventListener('focus', function() {
+				button.className = 'hidden';
+			}, false);
+			$('results').appendChild(button);
+		}
+		button.className = ''; // show
+		button.style.top = (e.pageY - 40) + 'px';
+		button.style.left = (e.pageX + 5) + 'px';
 	} else {
 		var opt = parseQuery(query_string);
 		if ($('query').value !== opt.query) $('query').value = opt.query;
+		if (button) button.className = 'hidden';
 	}
 }
+
 
 // View
 function showResults(res) {
@@ -379,8 +408,9 @@ function sw() {
 	}, false);
 }());
 
+
 // if hash is set already, do search
-(function init() {
+(function init() {console.log(location.hash);
 	// autofocus on Chrome is very weird, so implement by myself
 	$('query').focus();
 
