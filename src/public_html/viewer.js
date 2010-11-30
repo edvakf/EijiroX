@@ -333,12 +333,16 @@ function makeImplicitSearchLinks(html) {
 document.addEventListener('click', openSearchLink, true);
 
 function openSearchLink(e) {
-	if (e.target.className.indexOf('searchlink') >= 0 && e.target.title) {
+	var a = e.target;
+	while( !(a instanceof HTMLAnchorElement) && (a = a.parentNode) ) {}
+	if (a.className.indexOf('searchlink') >= 0 && a.title) {
 		e.preventDefault();
 		e.stopPropagation();
-		var query = e.target.title;
-		if ($('query').value !== query && query) $('query').value = query;
-		newsearch({query: query});
+		var query = a.title;
+		if ($('query').value !== query) {
+			$('query').value = query;
+			$('query').focus();
+		}
 	}
 }
 
