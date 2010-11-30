@@ -408,19 +408,14 @@ function sw() {
 	}, false);
 }());
 
-
 // if hash is set already, do search
-(function init() {console.log(location.hash);
-	// autofocus on Chrome is very weird, so implement by myself
-	$('query').focus();
-
-	//console.log(location.hash);
+(function init() {
 	var opt = parseQuery(location.hash.replace(/^#/, ''));
-	var q = opt.query;
-	if (!q) return;
-	opt.query = q.split('+').join(' ');
-	if (!opt.page) opt.page = 1;
-	location.hash = serializeToQuery(opt);
+	var q = (opt.query || '').split('+').join(' ');
+	if (q) $('query').value = q;
+
+	// autofocus on Chrome is very weird, so implement by myself
+	$('query').focus(); // starts search
 }());
 
 
