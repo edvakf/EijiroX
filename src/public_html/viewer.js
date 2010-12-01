@@ -82,7 +82,7 @@ function newsearch(opt) {
   var undef;
   if (opt.query === undef) return;
 
-  opt.query = opt.query.replace(/^▽|▼/g, ''); // for SKK
+  opt.query = opt.query.replace(/^[▽▼]/g, ''); // for SKK
   if (!opt.page) opt.page = 1;
   opt.full = !!opt.full;
 
