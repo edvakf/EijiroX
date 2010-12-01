@@ -220,7 +220,7 @@ function storeFile(type, file, callback) {
 
 // search
 var default_limit = 15; // how many results to show in one page
-var optlist = ['query', 'page', 'full', 'id_offset', 'limit'];
+var optlist = ['query', 'page', 'full', 'limit'];
 
 function search(opt, callback) {
   //console.log(opt);
@@ -273,35 +273,34 @@ function searchEntry(opt, callback) {
 // common_tokens is defined in common_tokens.js
 function searchFull(opt, callback) {
   var query = opt.query;
+  var page = opt.page || 1;
   var limit = opt.limit || default_limit;
-  var id_offset = opt.id_offset || 0;
-  var rv = {query:query, more:false, full:true, results:[]};
+  var offset = (page - 1) * limit;
+  var rv = {query:query, page:page, more:false, full:true, results:[]};
   var tokens = tokenize(query.toLowerCase());
+  var qtokens = '|' + tokens.join('|') + '|';
   tokens = tokens
     .filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 10000)}) // opposite of "don't-index-condition"
     .sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
   if (!tokens.length) callback(rv);
-  console.log([query, id_offset, tokens[0], common_tokens[tokens[0]]||0].toString());
+  console.log([query, page, tokens[0], common_tokens[tokens[0]]||0].toString());
 
   var t = Date.now();
   db.transaction(
     function transaction(tx) {
       tx.executeSql(
-        'SELECT * FROM eijiro WHERE id > ? ' + 
-          'AND id IN ( SELECT id FROM invindex WHERE token = ? ) ' + 
-          'AND entry LIKE ? ESCAPE ? LIMIT ? ;' ,
-        [id_offset, tokens[0], '%'+likeEscape(query)+'%', '@',limit],
+        'SELECT entry, raw FROM eijiro JOIN invindex USING(id) ' + 
+          'WHERE token = ? AND entry LIKE ? ESCAPE ? LIMIT ? OFFSET ?;' ,
+        [tokens[0], '%'+likeEscape(query)+'%', '@', limit, offset],
         function sqlSuccess(tx, res) {
-          var qtokens = '|' + tokenize(query).join('|') + '|';
           for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
             var item = rows.item(i);
-            if (('|' + tokenize(item.entry).join('|') + '|').indexOf(qtokens) >= 0) { // to solve the issue: "the more" hits "breathe more"
+            // to solve the issue: "the more" hits "breathe more"
+            if (('|' + tokenize(item.entry.toLowerCase()).join('|') + '|').indexOf(qtokens) >= 0) {
               rv.results.push(item.raw);
             }
-            id_offset = item.id;
           }
           if (l === limit) rv.more = true;
-          rv.id_offset = id_offset;
           console.log('took ' + (Date.now() - t) + ' ms');
           callback(rv);
         },

@@ -76,8 +76,6 @@ window.addEventListener('mouseup', mouseUp, true);
 
 var searchDelay = Debounce(80); // hold 80 ms before searching (when typed in)
 
-var fullsearch_id_offset; // when the last search was full text search, remember the offset
-
 var query_string; // serialized query option (will become URL fragment under certain conditions)
 
 function newsearch(opt) {
@@ -87,7 +85,6 @@ function newsearch(opt) {
   opt.query = opt.query.replace(/^▽|▼/g, ''); // for SKK
   if (!opt.page) opt.page = 1;
   opt.full = !!opt.full;
-  if (opt.full && opt.page > 1) opt.id_offset = fullsearch_id_offset || 0;
 
   query_string = serializeToQuery(opt);
 
@@ -114,7 +111,6 @@ function hashchange() {
 function searchFinished(res) {
   //console.log(res);
   if (res.query !== parseQuery(query_string).query) return;
-  if (res.id_offset) fullsearch_id_offset = res.id_offset;
 
   setHashDelay(query_string, function() {
     showResults(res);

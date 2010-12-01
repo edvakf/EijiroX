@@ -5,8 +5,7 @@ if (this.chrome) {
         query: ((request.query || '') + '').trim(),
         limit: Math.floor(request.limit) > 0 ? Math.floor(request.limit) : 0,
         page: Math.floor(request.page) > 0 ? Math.floor(request.page) : 1,
-        full: !!request.full,
-        id_offset: Math.floor(request.id_offset) > 0 ? Math.floor(request.id_offset) : 0
+        full: !!request.full
       };
       search(opt, function callback(response) {
         if (request.html) {

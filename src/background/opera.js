@@ -98,7 +98,6 @@ if (window.opera) {
       opt.query = req.queryItems.query ? decodeURIComponent(req.queryItems.query[0]) : '';
       opt.page = req.queryItems.page ? req.queryItems.page[0] * 1 : 1;
       opt.full = req.queryItems.full ? true : false;
-      opt.id_offset = req.queryItems.id_offset ? req.queryItems.id_offset[0] * 1 : 0;
       search(opt, function(ret) {
         res.write(JSON.stringify(ret));
         res.close();
