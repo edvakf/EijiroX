@@ -15,7 +15,7 @@ var linesToHtml = (function () {
     var trans = m[3].split(re_sep);
     return '<dt class="entry-box">' +
         '<span class="entry">' + highlightQuery(query, makeImplicitSearchLinks(htmlEscape(word))) + "</span>" +
-        (!kind ? '' : '<span class="kind"><span class="bracket">{</span>' + htmlEscape(kind) + '<span class="bracket">}</span></span>') + 
+        (!kind ? '' : ' <span class="kind"><span class="bracket">{</span>' + htmlEscape(kind) + '<span class="bracket">}</span></span>') + 
         ' <span class="separator">:</span> ' +
       '</dt>' +
       trans.map(function(t) {

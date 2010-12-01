@@ -68,15 +68,8 @@ h1 {
   text-decoration: underline;
 }
 
-#results .entry-box {
-  margin-left: 1em;
-}
-
 #results .entry {
   font-weight: bold;
-}
-#results .kind {
-  margin-left:0.5em;
 }
 
 #results .kind, #results .info {
