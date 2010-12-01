@@ -219,8 +219,8 @@ function storeFile(type, file, callback) {
 }
 
 // search
-var limit = 15; // how many results to show in one page
-var optlist = ['query', 'page', 'full', 'id_offset'];
+var default_limit = 15; // how many results to show in one page
+var optlist = ['query', 'page', 'full', 'id_offset', 'limit'];
 
 function search(opt, callback) {
   //console.log(opt);
@@ -230,8 +230,7 @@ function search(opt, callback) {
   for (var x in opt) {
     if (optlist.indexOf(x) < 0) delete opt[x];
   }
-  var rv = {query:query, page:page, more:false, full:full, results:[]};
-  if (query === '') return setTimeout(function() {callback(rv)}, 0);
+  if (query === '') return setTimeout(function() {opt.results = []; callback(opt)}, 0);
   if (full) {
     return searchFull(opt, callback);
   }
@@ -243,6 +242,7 @@ function searchEntry(opt, callback) {
   var page = opt.page;
   console.log([query, page].toString());
   var rv = {query:query, page:page, more:false, full:false, results:[]};
+  var limit = opt.limit || default_limit;
   var offset = (page - 1) * limit;
   var q = (query + '').replace(/[\x00-\x1f\x7f-\xa0]/g,'').toLowerCase();
   var t = Date.now();
@@ -273,15 +273,15 @@ function searchEntry(opt, callback) {
 // common_tokens is defined in common_tokens.js
 function searchFull(opt, callback) {
   var query = opt.query;
-  var page = opt.page;
+  var limit = opt.limit || default_limit;
   var id_offset = opt.id_offset || 0;
-  var rv = {query:query, page:page, more:false, full:true, results:[]};
+  var rv = {query:query, more:false, full:true, results:[]};
   var tokens = tokenize(query.toLowerCase());
   tokens = tokens
     .filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 10000)}) // opposite of "don't-index-condition"
     .sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
   if (!tokens.length) callback(rv);
-  console.log([query, page, id_offset, tokens[0], common_tokens[tokens[0]]||0].toString());
+  console.log([query, id_offset, tokens[0], common_tokens[tokens[0]]||0].toString());
 
   var t = Date.now();
   db.transaction(
