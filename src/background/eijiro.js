@@ -279,6 +279,8 @@ function searchFull(opt, callback) {
   var rv = {query:query, page:page, more:false, full:true, results:[]};
   var tokens = tokenize(query.toLowerCase());
   var qtokens = '|' + tokens.join('|') + '|';
+  var m;
+  var re_line = /■(.*?)(?:  ?{.*?})? : (.*)/;
   tokens = tokens
     .filter(function(c) {return !((c.length === 1 && !re_kanji.test(c)) || common_tokens[c] > 10000)}) // opposite of "don't-index-condition"
     .sort(function(a,b) {return (common_tokens[a]||0) - (common_tokens[b]||0)}); // sort by the least common order
@@ -290,13 +292,15 @@ function searchFull(opt, callback) {
     function transaction(tx) {
       tx.executeSql(
         'SELECT entry, raw FROM eijiro JOIN invindex USING(id) ' + 
-          'WHERE token = ? AND entry LIKE ? ESCAPE ? LIMIT ? OFFSET ?;' ,
+          'WHERE token = ? AND coalesce(entry, raw) LIKE ? ESCAPE ? LIMIT ? OFFSET ?;' ,
         [tokens[0], '%'+likeEscape(query)+'%', '@', limit, offset],
         function sqlSuccess(tx, res) {
           for (var i = 0, rows = res.rows, l = rows.length; i < l; i++) {
             var item = rows.item(i);
             // to solve the issue: "the more" hits "breathe more"
-            if (('|' + tokenize(item.entry.toLowerCase()).join('|') + '|').indexOf(qtokens) >= 0) {
+            if (('|' + tokenize((
+                    item.entry || (m = item.raw.match(re_line)) && m[1]
+                    ).toLowerCase()).join('|') + '|').indexOf(qtokens) >= 0) {
               rv.results.push(item.raw);
             }
           }

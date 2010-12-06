@@ -7,3 +7,8 @@ widget/*
 crx/*
 *.crx
 *.zip
+makedatabase/dict.sql
+makedatabase/eijirox.db
+makedatabase/eijirox.db-journal
+makedatabase/*.TXT
+makedatabase/*.exe
