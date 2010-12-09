@@ -216,6 +216,19 @@ function showResults(res) {
 * initialization
 */
 
+// switch views
+$('switch').addEventListener('click', sw, false);
+
+function sw() {
+  if ($('config').className.indexOf('hidden') >= 0) {
+    $('config').className = $('config').className.replace('hidden', '');
+    $('main').className += 'hidden';
+  } else {
+    $('main').className = $('main').className.replace('hidden', '');
+    $('config').className += 'hidden';
+  }
+}
+
 // whether to show ruby or not
 (function() {
   var n = $('noruby');
