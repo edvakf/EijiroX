@@ -265,6 +265,24 @@ function sw() {
   }, false);
 }());
 
+// append custom CSS
+(function() {
+  var n = $('custom-style');
+  var c = localStorage['custom-style'];
+  var s = document.createElement('style');
+  if (c) {
+    n.value = s.textContent = c;
+  }
+  document.querySelector('head').appendChild(s);
+  var timer;
+  n.addEventListener('input', function(e) {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      s.textContent = localStorage['custom-style'] = n.value;
+    }, 500);
+  }, false);
+}());
+
 // selection-search button
 $('selection-search').onclick = function() {$('query').focus();};
 $('query').addEventListener('focus', function() { $('selection-search').className = 'hidden'; }, false);
