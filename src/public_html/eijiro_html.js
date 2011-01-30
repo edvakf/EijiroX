@@ -175,8 +175,8 @@ var linesToHtml = (function () {
   /*
   * convert eijiro phonetic symbols to IPA
   */
-  var phonetic = {'t∫':'ʧ', 'dз':'ʤ', 'ae':'æ', '∫':'ʃ', 'η':'ŋ', 'з':'ʒ', 'δ':'ð', "'":'\u0301', '`':'\u0300', 'α':'ɑ', 'э':'ə', 'Λ':'ʌ', 'ｏ':'ɔ', ':':'ː', '(':'<i>', ')':'</i>'};
-  var re_phonetic = /(t∫|dз|ae|[∫ηзδ'`αэΛｏ:()])/g;
+  var phonetic = {'ae':'æ', 'i`':'ì', "i'":'í', '∫':'ʃ', 'η':'ŋ', 'з':'ʒ', 'δ':'ð', "'":'\u0301', '`':'\u0300', 'α':'ɑ', 'э':'ə', 'Λ':'ʌ', 'ｏ':'ɔ', ':':'ː', 'g':'ɡ', '(':'<i>', ')':'</i>'};
+  var re_phonetic = /(ae|i['`]|[∫ηзδ'`αэΛｏ:g()])/g;
   function convertPhonetic(text) {
     if (!text) return '';
     return '<span class="phonetic">' + text.replace(re_phonetic, function(m) {return phonetic[m];}) + '</span>';
