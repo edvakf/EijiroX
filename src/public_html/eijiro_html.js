@@ -80,6 +80,7 @@ var linesToHtml = (function () {
   var re_kanji = '(?:[々〇〻\u3400-\u9FFF\uF900-\uFAFF]|[\uD840-\uD87F][\uDC00-\uDFFF])+'; // http://tama-san.com/?p=196
   var re_trivial = /【(?:レベル|発音！?|＠|大学入試|分節|変化|読み方)】/;
   var re_henka = /【変化】[^【]+/;
+  var re_bunsetsu = /【分節】[^【]+/;
   var re_hatsuon = /(【発音！?】)([^【]+)/;
   var re_hatsuon_sep = / *(、|《.*?》)+ */;
   var re_redirect = /<→(.*?)>/;
@@ -92,6 +93,9 @@ var linesToHtml = (function () {
     if (re_trivial.test(text)) {
       return htmlEscape(text)
         .replace(re_henka, makeImplicitSearchLinks)
+        .replace(re_bunsetsu, function($0) {
+          return $0.replace(/・/g, '·');
+        })
         .replace(re_hatsuon, function($0, $1, $2) {
           return $1 + $2.split(re_hatsuon_sep).map(function(l, i) {
               if (i % 2 !== 0) return l;
