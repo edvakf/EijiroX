@@ -155,20 +155,26 @@ function mouseUp(e) {
   mouseState = 0;
 }
 
+var selectTimer = null;
 function select(e) {
   if (document.activeElement === $('query')) return;
   if (mouseState !== 1) return;
-  var sel = (window.getSelection() + '').trim();
-  var button = $('selection-search');
-  if (sel) {
-    $('query').value = sel;
-    button.className = ''; // show
-    button.style.top = (e.pageY - 10) + 'px';
-    button.style.left = (e.pageX + 5) + 'px';
-  } else {
-    var opt = parseQuery(query_string);
-    if ($('query').value !== opt.query) $('query').value = opt.query;
-    button.className = 'hidden';
+  if (!selectTimer) {
+    selectTimer = setTimeout(function() {
+      selectTimer = null;
+      var sel = (window.getSelection() + '').trim();
+      var button = $('selection-search');
+      if (sel) {
+        $('query').value = sel;
+        button.className = ''; // show
+        button.style.top = (e.pageY - 10) + 'px';
+        button.style.left = (e.pageX + 5) + 'px';
+      } else {
+        var opt = parseQuery(query_string);
+        if ($('query').value !== opt.query) $('query').value = opt.query;
+        button.className = 'hidden';
+      }
+    }, 50);
   }
 }
 
